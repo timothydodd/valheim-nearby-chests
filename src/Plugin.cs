@@ -24,6 +24,9 @@ namespace NearbyChests
 
         internal static ConfigEntry<bool> StackToNearby;
         internal static ConfigEntry<bool> KeepHotbar;
+        internal static ConfigEntry<bool> ExcludeFood;
+        internal static ConfigEntry<bool> ExcludeAmmo;
+        internal static ConfigEntry<bool> ExcludeEquipment;
         internal static ConfigEntry<bool> PlaceUnassignedItems;
         internal static ConfigEntry<string> UnassignedItemTypes;
         internal static ConfigEntry<bool> FallbackToOpenChest;
@@ -52,6 +55,13 @@ namespace NearbyChests
                 "When you press the Stack button on an open chest, send your items to every nearby chest that already holds that item.");
             KeepHotbar = Config.Bind("Stacking", "KeepHotbar", true,
                 "Never stack items from your hotbar (the top row of your inventory).");
+            ExcludeFood = Config.Bind("Stacking", "ExcludeFood", true,
+                "Never stack food, meads or potions you're carrying. Edible items that are used in a recipe " +
+                "(berries, mushrooms, honey...) count as ingredients and still get stacked.");
+            ExcludeAmmo = Config.Bind("Stacking", "ExcludeAmmo", true,
+                "Never stack arrows, bolts, bait or other ammo you're carrying.");
+            ExcludeEquipment = Config.Bind("Stacking", "ExcludeEquipment", true,
+                "Never stack weapons, armor, shields, tools, torches, utility items or trinkets.");
             PlaceUnassignedItems = Config.Bind("Stacking", "PlaceUnassignedItems", true,
                 "Items that no nearby chest holds yet go to the chest with the most similar items " +
                 "(metals with metals, hides with hides, same biome...), or into an empty chest if none match. " +

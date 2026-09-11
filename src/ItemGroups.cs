@@ -19,8 +19,9 @@ namespace NearbyChests
 #
 # Raw = meat, fish, eggs and other animal ingredients, plus uncooked oven dishes.
 # Plants = berries, mushrooms, vegetables, grain, flour, spices and other plant ingredients.
-# Anything listed here gets placed this way, whatever its item type. Meads aren't listed, so they
-# stay in your inventory unless a chest already holds that mead.
+# Anything listed here gets placed this way, whatever its item type. The exception is food, ammo and
+# equipment: while the ExcludeFood/ExcludeAmmo/ExcludeEquipment settings are on, those never leave
+# your inventory, so the Cooked group only affects how chests are sorted.
 #
 # One group per line:   GroupName = PrefabName, PrefabName, ...
 # - Names are item prefab names (the ones used by the 'spawn' console command). Not case sensitive.

@@ -28,8 +28,12 @@ chests for you.
 4. **Tidy chests.** Every chest that receives items gets its partial stacks merged and its
    contents sorted by type, then group, then name.
 
-These items never move: equipped items, your hotbar (top row), and non-stackable gear
-(weapons, armor, tools). Keep food you want to take with you on the hotbar.
+Stacking leaves these in your inventory. Each has its own setting, and all are on by default:
+- **Food, meads and potions.** Edible items that are also used in a recipe (berries, mushrooms,
+  honey and so on) count as ingredients and still get stacked.
+- **Ammo:** arrows, bolts, bait.
+- **Equipment:** weapons, armor, shields, tools, torches, utility items, trinkets.
+- **Your hotbar** (the top row), and anything you have equipped.
 
 Chests the mod never touches:
 - The Obliterator.
@@ -69,6 +73,9 @@ After the first launch, settings are in `BepInEx\config\tdodd.valheim.nearbyches
 | Crafting | BuildFromChests      | true             | Use chest materials when building. |
 | Stacking | StackToNearby        | true             | Stack button pushes to all nearby chests. Turn off for the vanilla button. |
 | Stacking | KeepHotbar           | true             | Never stack items from the top row. |
+| Stacking | ExcludeFood          | true             | Never stack food, meads or potions. Recipe ingredients still stack. |
+| Stacking | ExcludeAmmo          | true             | Never stack arrows, bolts, bait or other ammo. |
+| Stacking | ExcludeEquipment     | true             | Never stack weapons, armor, shields, tools, torches, utility items or trinkets. |
 | Stacking | PlaceUnassignedItems | true             | Items with no home go to a chest of similar items, or an empty chest. |
 | Stacking | UnassignedItemTypes  | Material,Trophy  | Item types placed even when not in the groups file. Other options: Consumable, Ammo, AmmoNonEquipable, Fish, Misc. |
 | Stacking | FallbackToOpenChest  | false            | If there's no similar or empty chest, use the open chest instead of leaving items in your inventory. |
@@ -90,7 +97,8 @@ Trophies = Trophy*
 - **Wildcards:** a trailing `*` matches any name starting with that text.
 - **Order:** if an item is listed twice, the first group wins.
 - **Always placed:** anything listed is placed even if its type isn't in `UnassignedItemTypes`.
-  Meads, arrows and coins aren't listed, so they only move when a chest already holds them.
+  Meads and coins aren't listed, so they only move when a chest already holds them. Food, ammo and
+  equipment are never stacked while their `Exclude...` settings are on, whatever group they're in.
 - **Live edits:** changes apply the next time you stack, with no restart needed.
 - **Resetting:** delete the file to get the latest defaults back.
 

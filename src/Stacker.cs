@@ -148,7 +148,75 @@ namespace NearbyChests
                 return false;
             if (Plugin.KeepHotbar.Value && item.m_gridPos.y == 0)
                 return false;
+            if (Plugin.ExcludeFood.Value && IsFood(item))
+                return false;
+            if (Plugin.ExcludeAmmo.Value && IsAmmo(item.m_shared.m_itemType))
+                return false;
+            if (Plugin.ExcludeEquipment.Value && IsEquipment(item.m_shared.m_itemType))
+                return false;
             return true;
+        }
+
+        private static HashSet<string> _ingredients;
+        private static int _ingredientsFromRecipes = -1;
+
+        /// <summary>
+        /// Food, meads and potions: anything consumable that isn't also a crafting ingredient.
+        /// Raspberries or honey are edible but go into recipes, so they still stack.
+        /// </summary>
+        private static bool IsFood(ItemDrop.ItemData item)
+        {
+            if (item.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Consumable)
+                return false;
+
+            ObjectDB db = ObjectDB.instance;
+            if (db == null)
+                return true;
+            if (_ingredients == null || _ingredientsFromRecipes != db.m_recipes.Count)
+            {
+                _ingredients = new HashSet<string>();
+                foreach (Recipe recipe in db.m_recipes)
+                {
+                    if (recipe == null || recipe.m_resources == null)
+                        continue;
+                    foreach (Piece.Requirement req in recipe.m_resources)
+                    {
+                        if (req.m_resItem != null)
+                            _ingredients.Add(req.m_resItem.m_itemData.m_shared.m_name);
+                    }
+                }
+                _ingredientsFromRecipes = db.m_recipes.Count;
+            }
+            return !_ingredients.Contains(item.m_shared.m_name);
+        }
+
+        private static bool IsAmmo(ItemDrop.ItemData.ItemType type) =>
+            type == ItemDrop.ItemData.ItemType.Ammo || type == ItemDrop.ItemData.ItemType.AmmoNonEquipable;
+
+        private static bool IsEquipment(ItemDrop.ItemData.ItemType type)
+        {
+            switch (type)
+            {
+                case ItemDrop.ItemData.ItemType.OneHandedWeapon:
+                case ItemDrop.ItemData.ItemType.TwoHandedWeapon:
+                case ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft:
+                case ItemDrop.ItemData.ItemType.Bow:
+                case ItemDrop.ItemData.ItemType.Attach_Atgeir:
+                case ItemDrop.ItemData.ItemType.Shield:
+                case ItemDrop.ItemData.ItemType.Helmet:
+                case ItemDrop.ItemData.ItemType.Chest:
+                case ItemDrop.ItemData.ItemType.Legs:
+                case ItemDrop.ItemData.ItemType.Hands:
+                case ItemDrop.ItemData.ItemType.Shoulder:
+                case ItemDrop.ItemData.ItemType.Utility:
+                case ItemDrop.ItemData.ItemType.Trinket:
+                case ItemDrop.ItemData.ItemType.Tool:
+                case ItemDrop.ItemData.ItemType.Torch:
+                case ItemDrop.ItemData.ItemType.Customization:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         /// <summary>Move as much of <paramref name="item"/> as fits into the chest. Returns the count moved.</summary>
