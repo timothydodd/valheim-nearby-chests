@@ -88,7 +88,8 @@ namespace NearbyChests
         /// Give an item with no home a place to live:
         /// 1. the chest holding the most items from the same group (metals, hides, same biome...),
         /// 2. otherwise an empty chest (the open one if it's empty, then the nearest),
-        /// 3. otherwise, if enabled, the open chest.
+        /// 3. otherwise a chest holding only one other group, which becomes a shared chest,
+        /// 4. otherwise, if enabled, the open chest.
         /// </summary>
         private static int PlaceUnassigned(ItemDrop.ItemData item, Inventory from, List<Container> chests,
             Container opened, HashSet<Container> touched)
@@ -119,6 +120,13 @@ namespace NearbyChests
                 if (c.GetInventory().NrOfItems() != 0)
                     continue;
                 moved += MoveInto(c, item, from, touched);
+                if (!from.ContainsItem(item))
+                    return moved;
+            }
+
+            if (Plugin.ShareChests.Value)
+            {
+                moved += Tidier.MoveToSharedChest(item, Tidier.GroupOf(item), from, chests, touched);
                 if (!from.ContainsItem(item))
                     return moved;
             }

@@ -23,17 +23,25 @@ chests for you.
    2. **An empty chest.** If no chest has anything from that group, the item goes into an empty
       chest. The one you're using comes first if it's empty, then the nearest. That chest becomes
       the group's home next time.
-   3. **Your inventory.** If there's no empty chest either, the item stays with you, and the
-      on-screen message tells you how many were left over.
+   3. **A shared chest.** Out of empty chests? A chest holding only one group takes this item's group
+      as a second one, preferring a related group.
+   4. **Your inventory.** If there's still nowhere to go, the item stays with you, and the on-screen
+      message tells you how many were left over.
 4. **Tidy chests.** Every chest that receives items gets its partial stacks merged and its
    contents sorted by type, then group, then name.
 5. **Tidy button.** The chest window gets a small **Tidy** icon (three bars) just left of Place
    stacks. It cleans out the chest you have open:
    - The chest's category is whichever group it holds the most of, for example Metals.
    - Anything that doesn't match moves to a nearby chest of its own category.
-   - If there's no chest for that category, it goes to a **junk chest**: a chest that's mostly
-     uncategorized items (materials that aren't in any group).
-   - If there's no junk chest either, it stays where it is. Tidy never claims empty chests.
+   - If there's no chest for that category, it goes into an **empty chest**, which becomes that
+     category's chest from then on.
+   - If there are no empty chests left, it **shares a chest**: a chest holding just one group takes a
+     second one, preferring a related group (the one listed next to it in the groups file, so Raw
+     pairs with Plants and Wood with Stone). A chest holding exactly two groups counts as home for
+     both, so Tidy leaves it alone.
+   - Failing that, it goes to a **junk chest**: a chest that's mostly uncategorized items (materials
+     that aren't in any group).
+   - Anything left over stays where it is.
    - Afterwards the chest is sorted.
 
 Stacking leaves these in your inventory. Each has its own setting, and all are on by default:
@@ -98,6 +106,7 @@ After the first launch, settings are in `BepInEx\config\NearbyChests.cfg`:
 | Stacking | UnassignedItemTypes  | Material,Trophy  | Item types placed even when not in the groups file. Other options: Consumable, Ammo, AmmoNonEquipable, Fish, Misc. |
 | Stacking | FallbackToOpenChest  | false            | If there's no similar or empty chest, use the open chest instead of leaving items in your inventory. |
 | Stacking | SortAfterStack       | true             | Sort and merge chests that received items. |
+| Stacking | ShareChests          | true             | When a group has no chest and there's no empty chest, let a one-group chest take a second, related group. |
 | Stacking | TidyButton           | true             | Show the Tidy button in the chest window (restart to apply). |
 
 ### Item groups
@@ -162,8 +171,15 @@ chest window is shown, it's positioned just left of Stack using world-space corn
 at any resolution or UI scale.
 Each nearby chest's category is its most common group by stack count. Uncategorized items count as
 "junk", and ties go to the group listed first. Items in the open chest that don't match its category
-move to chests of their category, then to junk chests. A junk chest never passes items on to another
-junk chest.
+move to:
+1. chests of their category (dedicated chests first, then two-group chests holding it),
+2. an empty chest, which takes on that category,
+3. a one-group chest, which becomes a shared chest (closest group in file order first),
+4. junk chests.
+
+A chest holding exactly two groups keeps its second group when there's no better home, so shared
+chests don't bounce items back and forth. A junk chest never passes items on to another junk chest,
+and uncategorized items never become a shared chest's second group.
 
 **Food detection:** an item counts as food when it's a `Consumable` that the game can produce, meaning
 it's the output of an `ObjectDB` recipe or of a `CookingStation` (including ovens), `Fermenter` or

@@ -8,17 +8,23 @@ using UnityEngine.UI;
 namespace NearbyChests
 {
     /// <summary>
-    /// The Tidy button cleans out the chest you have open.
+    /// The Tidy button cleans out the chest you have open, plus the chest-category rules it shares
+    /// with Stack.
     ///
     /// Each chest's category is whichever group it holds the most stacks of. A chest that's mostly
-    /// uncategorized items (not in any group) is a junk chest. Items in the open chest that don't match
-    /// its category move to a nearby chest of their own category, or failing that to a junk chest, or
-    /// failing that stay where they are. Empty chests are never claimed.
+    /// uncategorized items (not in any group) is a junk chest, and a chest holding exactly two groups is
+    /// a shared chest. Items in the open chest that don't match its category move to, in order:
+    ///   1. a chest of their own group (dedicated chests first, then shared chests holding the group),
+    ///   2. an empty chest, which becomes that group's chest,
+    ///   3. a single-group chest with room, which becomes a shared chest (related groups preferred),
+    ///   4. a junk chest.
+    /// Anything left over stays. The second group in a shared chest stays put if it has no better home,
+    /// so shared chests don't bounce items back and forth.
     /// </summary>
     internal static class Tidier
     {
-        /// <summary>Category key for chests that are mostly uncategorized items.</summary>
-        private const string Junk = "\u0001junk";
+        /// <summary>Category key for items that aren't in any group.</summary>
+        internal const string Junk = "\u0001junk";
 
         public static void TidyChest(Container opened)
         {
@@ -29,8 +35,6 @@ namespace NearbyChests
             ItemGroups.ReloadIfChanged();
             ChestFinder.Invalidate();
             var others = ChestFinder.GetNearby(player).Where(c => c != opened).ToList();
-            // Work out each chest's category once, before anything moves.
-            var categories = others.ToDictionary(c => c, c => Category(c.GetInventory()));
 
             Inventory from = opened.GetInventory();
             string own = Category(from);
@@ -42,14 +46,26 @@ namespace NearbyChests
             {
                 foreach (ItemDrop.ItemData item in from.GetAllItems().ToList())
                 {
-                    string category = ItemGroups.Of(item) ?? Junk;
-                    if (category == own)
+                    string group = GroupOf(item);
+                    if (group == own)
                         continue;
 
-                    moved += MoveToCategory(item, category, from, categories, touched);
-                    // Fall back to a junk chest - unless this already is one; no point shuffling junk around.
-                    if (category != Junk && own != Junk && from.ContainsItem(item))
-                        moved += MoveToCategory(item, Junk, from, categories, touched);
+                    // 1-2: a proper home.
+                    moved += MoveToGroupChest(item, group, from, others, touched);
+                    if (from.ContainsItem(item))
+                        moved += MoveToEmptyChest(item, from, others, touched);
+                    if (!from.ContainsItem(item))
+                        continue;
+
+                    // No proper home: if this is a two-group chest, the second group is allowed to stay.
+                    if (Plugin.ShareChests.Value && GroupsIn(from).Count <= 2)
+                        continue;
+
+                    // 3-4: share another chest, or the junk chest (unless this already is one).
+                    if (Plugin.ShareChests.Value)
+                        moved += MoveToSharedChest(item, group, from, others, touched);
+                    if (group != Junk && own != Junk && from.ContainsItem(item))
+                        moved += MoveToJunkChest(item, from, others, touched);
                     if (from.ContainsItem(item))
                         stayed++;
                 }
@@ -71,21 +87,76 @@ namespace NearbyChests
             else
                 message = "Sorted - everything here belongs";
             if (moved > 0 && stayed > 0)
-                message += $"\n{stayed} {(stayed == 1 ? "stack" : "stacks")} had no matching or junk chest, so stayed";
+                message += $"\n{stayed} {(stayed == 1 ? "stack" : "stacks")} had nowhere else to go, so stayed";
             player.Message(MessageHud.MessageType.Center, message);
         }
 
-        /// <summary>Move an item into nearby chests of the given category, the most-dedicated first.</summary>
-        private static int MoveToCategory(ItemDrop.ItemData item, string category, Inventory from,
-            Dictionary<Container, string> categories, HashSet<Container> touched)
+        internal static string GroupOf(ItemDrop.ItemData item) => ItemGroups.Of(item) ?? Junk;
+
+        /// <summary>
+        /// Chests that are home to the group: dedicated chests (the group is their main category) with
+        /// the most of it first, then shared chests that hold the group.
+        /// </summary>
+        private static int MoveToGroupChest(ItemDrop.ItemData item, string group, Inventory from,
+            List<Container> others, HashSet<Container> touched)
+        {
+            var homes = others
+                .Select(c => new { Chest = c, Inv = c.GetInventory() })
+                .Where(x => Category(x.Inv) == group)
+                .OrderByDescending(x => CategoryCount(x.Inv, group))
+                .Select(x => x.Chest)
+                .ToList();
+            if (Plugin.ShareChests.Value)
+            {
+                homes.AddRange(others.Where(c => !homes.Contains(c)
+                    && GroupsIn(c.GetInventory()) is var g && g.Count == 2 && g.Contains(group)));
+            }
+            return MoveIntoFirst(item, from, homes, touched);
+        }
+
+        /// <summary>Start a new chest for the item's group in the nearest empty chest.</summary>
+        internal static int MoveToEmptyChest(ItemDrop.ItemData item, Inventory from,
+            IEnumerable<Container> candidates, HashSet<Container> touched) =>
+            MoveIntoFirst(item, from, candidates.Where(c => c.GetInventory().NrOfItems() == 0).ToList(), touched);
+
+        /// <summary>
+        /// Add the item's group to a chest that holds only one other group, turning it into a shared
+        /// chest. Prefers the most closely related group (nearest in the groups file), then the chest
+        /// with the most free space.
+        /// </summary>
+        internal static int MoveToSharedChest(ItemDrop.ItemData item, string group, Inventory from,
+            IEnumerable<Container> candidates, HashSet<Container> touched)
+        {
+            // Uncategorized items belong in a junk chest, not as a proper chest's second group.
+            if (group == Junk)
+                return 0;
+            var partners = candidates
+                .Select(c => new { Chest = c, Inv = c.GetInventory() })
+                .Select(x => new { x.Chest, x.Inv, Groups = GroupsIn(x.Inv) })
+                .Where(x => x.Groups.Count == 1 && !x.Groups.Contains(Junk) && !x.Groups.Contains(group)
+                    && x.Inv.HaveEmptySlot())
+                .OrderBy(x => Relatedness(group, x.Groups.First()))
+                .ThenByDescending(x => x.Inv.GetEmptySlots())
+                .Select(x => x.Chest)
+                .ToList();
+            return MoveIntoFirst(item, from, partners, touched);
+        }
+
+        private static int MoveToJunkChest(ItemDrop.ItemData item, Inventory from,
+            List<Container> others, HashSet<Container> touched)
+        {
+            var junk = others
+                .Where(c => Category(c.GetInventory()) == Junk)
+                .OrderByDescending(c => CategoryCount(c.GetInventory(), Junk))
+                .ToList();
+            return MoveIntoFirst(item, from, junk, touched);
+        }
+
+        private static int MoveIntoFirst(ItemDrop.ItemData item, Inventory from, List<Container> chests,
+            HashSet<Container> touched)
         {
             int moved = 0;
-            var homes = categories
-                .Where(kv => kv.Value == category)
-                .Select(kv => kv.Key)
-                .OrderByDescending(c => CategoryCount(c.GetInventory(), category))
-                .ToList();
-            foreach (Container c in homes)
+            foreach (Container c in chests)
             {
                 moved += Stacker.MoveInto(c, item, from, touched);
                 if (!from.ContainsItem(item))
@@ -94,18 +165,36 @@ namespace NearbyChests
             return moved;
         }
 
+        /// <summary>How far apart two groups are in the groups file; neighbours are most related.</summary>
+        private static int Relatedness(string a, string b)
+        {
+            int ra = ItemGroups.RankOf(a), rb = ItemGroups.RankOf(b);
+            if (ra == int.MaxValue || rb == int.MaxValue)
+                return 1000;
+            return System.Math.Abs(ra - rb);
+        }
+
+        /// <summary>The distinct groups in a chest (uncategorized items count as Junk).</summary>
+        internal static HashSet<string> GroupsIn(Inventory inv)
+        {
+            var groups = new HashSet<string>();
+            foreach (ItemDrop.ItemData item in inv.GetAllItems())
+                groups.Add(GroupOf(item));
+            return groups;
+        }
+
         /// <summary>
         /// The category with the most stacks in the chest (uncategorized items count as Junk),
         /// or null if the chest is empty.
         /// </summary>
-        private static string Category(Inventory inv)
+        internal static string Category(Inventory inv)
         {
             var counts = new Dictionary<string, int>();
             foreach (ItemDrop.ItemData item in inv.GetAllItems())
             {
-                string category = ItemGroups.Of(item) ?? Junk;
-                counts.TryGetValue(category, out int n);
-                counts[category] = n + 1;
+                string group = GroupOf(item);
+                counts.TryGetValue(group, out int n);
+                counts[group] = n + 1;
             }
             if (counts.Count == 0)
                 return null;
@@ -117,8 +206,8 @@ namespace NearbyChests
                 .First().Key;
         }
 
-        private static int CategoryCount(Inventory inv, string category) =>
-            inv.GetAllItems().Count(i => (ItemGroups.Of(i) ?? Junk) == category);
+        private static int CategoryCount(Inventory inv, string group) =>
+            inv.GetAllItems().Count(i => GroupOf(i) == group);
     }
 
     /// <summary>Adds a small Tidy icon button to the chest window's title bar, just left of Place Stacks.</summary>
