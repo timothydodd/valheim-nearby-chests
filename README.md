@@ -112,6 +112,42 @@ Trophies = Trophy*
 - **Live edits:** changes apply the next time you stack, with no restart needed.
 - **Resetting:** delete the file to get the latest defaults back.
 
+## How it works
+
+The mod is written in C# and uses [Harmony](https://github.com/pardeike/Harmony) patches, like
+most Valheim mods.
+
+**Crafting from chests** doesn't rewrite any of Valheim's crafting logic. The game already has
+methods that check whether you have a recipe's requirements (`Player.HaveRequirementItems`,
+`Player.HaveRequirements(Piece, ...)`, `Player.GetFirstRequiredItem`,
+`InventoryGui.SetupRequirement`) and methods that spend them (`Player.ConsumeResources`,
+`InventoryGui.DoCrafting`). The mod marks when the game is inside one of those, with a "count scope"
+and a "consume scope". While a scope is active, calls on the local player's inventory are extended
+to nearby chests:
+
+- `Inventory.CountItems` / `HaveItem` add chest totals.
+- `Inventory.GetItem` falls back to a chest item.
+- `Inventory.RemoveItem(name, ...)` takes whatever the player is short of from chests, nearest first.
+
+Outside those scopes, the inventory behaves exactly like vanilla. That keeps the patches small, and
+recipe changes in game updates mostly just work. Nearby chest lookups and item counts are cached for
+a second and invalidated whenever a chest's contents change, because the crafting and build menus
+ask many times per frame.
+
+**Stacking** replaces the game's stack action where it's triggered: `InventoryGui.OnStackAll` (the
+button) and `Container.RPC_StackResponse` (holding Use on a chest). For each eligible item the mod:
+
+1. fills chests that already contain it,
+2. fills the chest holding the most items from the same group (`ItemGroups.cs`),
+3. fills an empty chest,
+4. optionally falls back to the open chest (`FallbackToOpenChest`).
+
+Chests that received items are then merged and sorted by type, group order, name, quality and stack
+size.
+
+**Food detection:** an item counts as food when it's a `Consumable` that doesn't appear as a
+requirement in any `ObjectDB` recipe. This works with modded recipes too.
+
 ## Multiplayer
 
 The mod is client-side, so only you need it and the server doesn't. Before changing a chest, it takes
