@@ -1,0 +1,8 @@
+bin/
+obj/
+release/
+tools/
+*.user
+.vs/
+ValheimDir.props
+.github/copilot-instructions.md

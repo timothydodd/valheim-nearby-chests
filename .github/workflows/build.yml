@@ -1,0 +1,76 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  # Valheim dedicated server - free to download anonymously and ships the same game DLLs.
+  VALHEIM_SERVER_APP_ID: "896660"
+  BEPINEX_PACK_VERSION: "5.4.2350"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Install SteamCMD
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lib32gcc-s1
+          mkdir -p "$HOME/steamcmd"
+          curl -sSL https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz | tar -xz -C "$HOME/steamcmd"
+
+      - name: Download Valheim dedicated server
+        run: |
+          # SteamCMD often fails its first run while it updates itself, so retry.
+          for attempt in 1 2 3; do
+            "$HOME/steamcmd/steamcmd.sh" +force_install_dir "$GITHUB_WORKSPACE/valheim-server" \
+              +login anonymous +app_update "$VALHEIM_SERVER_APP_ID" validate +quit && \
+              [ -f "$GITHUB_WORKSPACE/valheim-server/valheim_server_Data/Managed/assembly_valheim.dll" ] && break
+            echo "SteamCMD attempt $attempt failed, retrying..."
+            sleep 5
+          done
+          ls "$GITHUB_WORKSPACE/valheim-server/valheim_server_Data/Managed/assembly_valheim.dll"
+
+      - name: Read mod version
+        id: version
+        run: |
+          version=$(grep -oP 'Version = "\K[^"]+' src/Plugin.cs)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_REF" == refs/tags/v* && "${GITHUB_REF_NAME#v}" != "$version" ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME doesn't match Plugin.Version $version"
+            exit 1
+          fi
+
+      - name: Build
+        run: dotnet build -c Release -p:ValheimDir="$GITHUB_WORKSPACE/valheim-server"
+
+      - name: Package
+        run: |
+          curl -sSL -o bepinex.zip \
+            "https://thunderstore.io/package/download/denikson/BepInExPack_Valheim/$BEPINEX_PACK_VERSION/"
+          python3 build/package.py "${{ steps.version.outputs.version }}" bepinex.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NearbyChests-${{ steps.version.outputs.version }}
+          path: release/*.zip
+
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*.zip
+          generate_release_notes: true
