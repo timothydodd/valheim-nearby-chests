@@ -121,16 +121,10 @@ namespace NearbyChests
             inv.GetAllItems().Count(i => (ItemGroups.Of(i) ?? Junk) == category);
     }
 
-    /// <summary>
-    /// Adds a small Tidy icon button to the chest window's title bar, just left of Place Stacks,
-    /// with a tooltip explaining it.
-    /// </summary>
+    /// <summary>Adds a small Tidy icon button to the chest window's title bar, just left of Place Stacks.</summary>
     [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.Awake))]
     internal static class InventoryGui_Awake_TidyButton_Patch
     {
-        private const string Tooltip =
-            "Tidy: send items that don't belong in this chest to chests of their own kind, then sort it";
-
         private static void Postfix(InventoryGui __instance)
         {
             if (!Plugin.TidyButton.Value)
@@ -177,17 +171,6 @@ namespace NearbyChests
             image.color = tint;
             image.preserveAspect = true;
             image.raycastTarget = false;
-
-            // Hover tooltip, borrowing the game's tooltip template from any existing tooltip.
-            UITooltip template = __instance.GetComponentsInChildren<UITooltip>(true)
-                .FirstOrDefault(t => t.m_tooltipPrefab != null);
-            if (template != null)
-            {
-                UITooltip tooltip = clone.GetComponent<UITooltip>() ?? clone.AddComponent<UITooltip>();
-                tooltip.m_tooltipPrefab = template.m_tooltipPrefab;
-                tooltip.m_topic = "";
-                tooltip.m_text = Tooltip;
-            }
 
             // Final position is worked out the first time the chest window is on screen (see below),
             // once the UI has real sizes.

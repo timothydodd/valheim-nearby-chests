@@ -27,8 +27,8 @@ chests for you.
       on-screen message tells you how many were left over.
 4. **Tidy chests.** Every chest that receives items gets its partial stacks merged and its
    contents sorted by type, then group, then name.
-5. **Tidy button.** The chest window gets a small **Tidy** icon just left of Place stacks (hover it
-   for a tooltip). It cleans out the chest you have open:
+5. **Tidy button.** The chest window gets a small **Tidy** icon (three bars) just left of Place
+   stacks. It cleans out the chest you have open:
    - The chest's category is whichever group it holds the most of, for example Metals.
    - Anything that doesn't match moves to a nearby chest of its own category.
    - If there's no chest for that category, it goes to a **junk chest**: a chest that's mostly
@@ -156,8 +156,8 @@ size.
 
 **Tidy** (`Tidier.cs`) adds its button by cloning the chest window's Stack button in an
 `InventoryGui.Awake` postfix. The clone is resized to a square, and its label is swapped for an icon
-drawn at runtime (`TidyIcon`). It gets a `UITooltip` that borrows the game's tooltip prefab, and its
-`UIGamePad` shortcut is removed so a controller press doesn't fire both buttons. The first time the
+drawn at runtime (`TidyIcon`). Its `UIGamePad` shortcut is removed so a controller press doesn't fire
+both buttons. The first time the
 chest window is shown, it's positioned just left of Stack using world-space corners, so it lines up
 at any resolution or UI scale.
 Each nearby chest's category is its most common group by stack count. Uncategorized items count as
