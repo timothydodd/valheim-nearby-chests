@@ -12,7 +12,7 @@ namespace NearbyChests
     {
         public const string Guid = "NearbyChests";
         public const string ModName = "Nearby Chests";
-        public const string Version = "1.0.1";
+        public const string Version = "1.0.2";
 
         internal static ManualLogSource Log;
 
@@ -31,6 +31,7 @@ namespace NearbyChests
         internal static ConfigEntry<string> UnassignedItemTypes;
         internal static ConfigEntry<bool> FallbackToOpenChest;
         internal static ConfigEntry<bool> SortAfterStack;
+        internal static ConfigEntry<bool> TidyButton;
 
         internal static readonly HashSet<ItemDrop.ItemData.ItemType> UnassignedTypes = new HashSet<ItemDrop.ItemData.ItemType>();
 
@@ -75,6 +76,10 @@ namespace NearbyChests
                 "When off, it stays in your inventory.");
             SortAfterStack = Config.Bind("Stacking", "SortAfterStack", true,
                 "Sort and merge the contents of every chest that received items.");
+            TidyButton = Config.Bind("Stacking", "TidyButton", true,
+                "Show a Tidy button in the chest window. It moves items that don't match the open chest's category " +
+                "to a nearby chest of their own category, or to a junk chest (one that's mostly uncategorized items), " +
+                "then sorts the chest. Takes effect after a restart.");
 
             ParseUnassignedTypes();
             ItemGroups.Load();

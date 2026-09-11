@@ -27,6 +27,14 @@ chests for you.
       on-screen message tells you how many were left over.
 4. **Tidy chests.** Every chest that receives items gets its partial stacks merged and its
    contents sorted by type, then group, then name.
+5. **Tidy button.** The chest window gets a **Tidy** button next to Take All and Stack. It cleans out
+   the chest you have open:
+   - The chest's category is whichever group it holds the most of, for example Metals.
+   - Anything that doesn't match moves to a nearby chest of its own category.
+   - If there's no chest for that category, it goes to a **junk chest**: a chest that's mostly
+     uncategorized items (materials that aren't in any group).
+   - If there's no junk chest either, it stays where it is. Tidy never claims empty chests.
+   - Afterwards the chest is sorted.
 
 Stacking leaves these in your inventory. Each has its own setting, and all are on by default:
 - **Food, meads and potions:** anything cooked, baked, crafted or brewed. Edible things you pick or
@@ -90,6 +98,7 @@ After the first launch, settings are in `BepInEx\config\NearbyChests.cfg`:
 | Stacking | UnassignedItemTypes  | Material,Trophy  | Item types placed even when not in the groups file. Other options: Consumable, Ammo, AmmoNonEquipable, Fish, Misc. |
 | Stacking | FallbackToOpenChest  | false            | If there's no similar or empty chest, use the open chest instead of leaving items in your inventory. |
 | Stacking | SortAfterStack       | true             | Sort and merge chests that received items. |
+| Stacking | TidyButton           | true             | Show the Tidy button in the chest window (restart to apply). |
 
 ### Item groups
 
@@ -144,6 +153,14 @@ button) and `Container.RPC_StackResponse` (holding Use on a chest). For each eli
 
 Chests that received items are then merged and sorted by type, group order, name, quality and stack
 size.
+
+**Tidy** (`Tidier.cs`) adds a button by cloning the chest window's Stack button in an
+`InventoryGui.Awake` postfix. It's placed one step past Stack, using the Take All → Stack spacing,
+and the clone's `UIGamePad` shortcut is removed so a controller press doesn't fire both buttons.
+Each nearby chest's category is its most common group by stack count. Uncategorized items count as
+"junk", and ties go to the group listed first. Items in the open chest that don't match its category
+move to chests of their category, then to junk chests. A junk chest never passes items on to another
+junk chest.
 
 **Food detection:** an item counts as food when it's a `Consumable` that the game can produce, meaning
 it's the output of an `ObjectDB` recipe or of a `CookingStation` (including ovens), `Fermenter` or

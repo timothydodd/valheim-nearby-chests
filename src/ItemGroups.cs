@@ -129,9 +129,12 @@ DeepNorth = BjornPaw, MooseSinew, Ice, FrozenFuel, OozeMork, ElakingHairBundle, 
         }
 
         /// <summary>Position of the item's group in the file, so sorted chests keep groups together.</summary>
-        public static int Rank(ItemDrop.ItemData item)
+        public static int Rank(ItemDrop.ItemData item) => RankOf(Of(item));
+
+        /// <summary>Position of a group in the file; unlisted groups sort last.</summary>
+        public static int RankOf(string group)
         {
-            int index = Order.IndexOf(Of(item) ?? "");
+            int index = Order.IndexOf(group ?? "");
             return index < 0 ? int.MaxValue : index;
         }
 
@@ -166,11 +169,46 @@ DeepNorth = BjornPaw, MooseSinew, Ice, FrozenFuel, OozeMork, ElakingHairBundle, 
 
             // Unlisted non-materials still cluster by type (food with food, ammo with ammo).
             // Unlisted materials don't: nearly every chest has some material in it.
-            if (group == null && item.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Material)
-                group = TypePrefix + item.m_shared.m_itemType;
+            // Weapons, armor and tools count as one group, so a mixed gear chest stays together.
+            ItemDrop.ItemData.ItemType type = item.m_shared.m_itemType;
+            if (group == null && IsEquipment(type))
+                group = TypePrefix + "Equipment";
+            else if (group == null && IsAmmo(type))
+                group = TypePrefix + "Ammo";
+            else if (group == null && type != ItemDrop.ItemData.ItemType.Material)
+                group = TypePrefix + type;
 
             Resolved[prefab] = group;
             return group;
+        }
+
+        public static bool IsAmmo(ItemDrop.ItemData.ItemType type) =>
+            type == ItemDrop.ItemData.ItemType.Ammo || type == ItemDrop.ItemData.ItemType.AmmoNonEquipable;
+
+        public static bool IsEquipment(ItemDrop.ItemData.ItemType type)
+        {
+            switch (type)
+            {
+                case ItemDrop.ItemData.ItemType.OneHandedWeapon:
+                case ItemDrop.ItemData.ItemType.TwoHandedWeapon:
+                case ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft:
+                case ItemDrop.ItemData.ItemType.Bow:
+                case ItemDrop.ItemData.ItemType.Attach_Atgeir:
+                case ItemDrop.ItemData.ItemType.Shield:
+                case ItemDrop.ItemData.ItemType.Helmet:
+                case ItemDrop.ItemData.ItemType.Chest:
+                case ItemDrop.ItemData.ItemType.Legs:
+                case ItemDrop.ItemData.ItemType.Hands:
+                case ItemDrop.ItemData.ItemType.Shoulder:
+                case ItemDrop.ItemData.ItemType.Utility:
+                case ItemDrop.ItemData.ItemType.Trinket:
+                case ItemDrop.ItemData.ItemType.Tool:
+                case ItemDrop.ItemData.ItemType.Torch:
+                case ItemDrop.ItemData.ItemType.Customization:
+                    return true;
+                default:
+                    return false;
+            }
         }
     }
 }

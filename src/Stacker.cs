@@ -129,7 +129,7 @@ namespace NearbyChests
         }
 
         /// <summary>How many stacks in the inventory belong to the group.</summary>
-        private static int GroupScore(Inventory inv, string group)
+        internal static int GroupScore(Inventory inv, string group)
         {
             int score = 0;
             foreach (ItemDrop.ItemData i in inv.GetAllItems())
@@ -150,9 +150,9 @@ namespace NearbyChests
                 return false;
             if (Plugin.ExcludeFood.Value && IsFood(item))
                 return false;
-            if (Plugin.ExcludeAmmo.Value && IsAmmo(item.m_shared.m_itemType))
+            if (Plugin.ExcludeAmmo.Value && ItemGroups.IsAmmo(item.m_shared.m_itemType))
                 return false;
-            if (Plugin.ExcludeEquipment.Value && IsEquipment(item.m_shared.m_itemType))
+            if (Plugin.ExcludeEquipment.Value && ItemGroups.IsEquipment(item.m_shared.m_itemType))
                 return false;
             return true;
         }
@@ -217,37 +217,8 @@ namespace NearbyChests
                 made.Add(item.m_itemData.m_shared.m_name);
         }
 
-        private static bool IsAmmo(ItemDrop.ItemData.ItemType type) =>
-            type == ItemDrop.ItemData.ItemType.Ammo || type == ItemDrop.ItemData.ItemType.AmmoNonEquipable;
-
-        private static bool IsEquipment(ItemDrop.ItemData.ItemType type)
-        {
-            switch (type)
-            {
-                case ItemDrop.ItemData.ItemType.OneHandedWeapon:
-                case ItemDrop.ItemData.ItemType.TwoHandedWeapon:
-                case ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft:
-                case ItemDrop.ItemData.ItemType.Bow:
-                case ItemDrop.ItemData.ItemType.Attach_Atgeir:
-                case ItemDrop.ItemData.ItemType.Shield:
-                case ItemDrop.ItemData.ItemType.Helmet:
-                case ItemDrop.ItemData.ItemType.Chest:
-                case ItemDrop.ItemData.ItemType.Legs:
-                case ItemDrop.ItemData.ItemType.Hands:
-                case ItemDrop.ItemData.ItemType.Shoulder:
-                case ItemDrop.ItemData.ItemType.Utility:
-                case ItemDrop.ItemData.ItemType.Trinket:
-                case ItemDrop.ItemData.ItemType.Tool:
-                case ItemDrop.ItemData.ItemType.Torch:
-                case ItemDrop.ItemData.ItemType.Customization:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
         /// <summary>Move as much of <paramref name="item"/> as fits into the chest. Returns the count moved.</summary>
-        private static int MoveInto(Container chest, ItemDrop.ItemData item, Inventory from, HashSet<Container> touched)
+        internal static int MoveInto(Container chest, ItemDrop.ItemData item, Inventory from, HashSet<Container> touched)
         {
             Inventory to = chest.GetInventory();
             if (!to.HaveEmptySlot() && to.FindFreeStackSpace(item.m_shared.m_name, item.m_worldLevel) <= 0)
