@@ -63,7 +63,7 @@ To uninstall, delete `BepInEx\plugins\NearbyChests`. To remove BepInEx entirely,
 
 ## Configuration
 
-After the first launch, settings are in `BepInEx\config\tdodd.valheim.nearbychests.cfg`:
+After the first launch, settings are in `BepInEx\config\NearbyChests.cfg`:
 
 | Section  | Setting              | Default          | What it does |
 |----------|----------------------|------------------|--------------|
@@ -83,7 +83,7 @@ After the first launch, settings are in `BepInEx\config\tdodd.valheim.nearbyches
 
 ### Item groups
 
-Groups live in `BepInEx\config\tdodd.valheim.nearbychests.groups.txt`, one line per group:
+Groups live in `BepInEx\config\NearbyChests.groups.txt`, one line per group:
 
 ```
 Metals = CopperOre, Copper, CopperScrap, TinOre, Tin, Bronze, ...

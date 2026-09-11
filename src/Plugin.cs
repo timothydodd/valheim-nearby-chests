@@ -10,7 +10,7 @@ namespace NearbyChests
     [BepInPlugin(Guid, ModName, Version)]
     public class Plugin : BaseUnityPlugin
     {
-        public const string Guid = "tdodd.valheim.nearbychests";
+        public const string Guid = "NearbyChests";
         public const string ModName = "Nearby Chests";
         public const string Version = "1.0.0";
 
