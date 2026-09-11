@@ -50,13 +50,23 @@ Download the latest zip from [Releases](https://github.com/timothydodd/valheim-n
 
 | File | Use it when |
 |---|---|
-| `NearbyChests-x.y.z-with-BepInEx.zip` | You don't have BepInEx yet. Includes BepInExPack_Valheim. |
+| `NearbyChests-x.y.z-with-BepInEx.zip` | You don't have BepInEx yet. Includes BepInEx, already laid out for the game folder. |
 | `NearbyChests-x.y.z.zip` | You already have BepInEx installed. |
 
-1. Extract the zip into your Valheim folder, so that `BepInEx\` ends up next to `valheim.exe`.
-   On Steam, that's *right-click Valheim → Manage → Browse local files*.
-2. Launch the game normally.
-3. To check it loaded, open `BepInEx\LogOutput.log` and look for `Nearby Chests x.y.z loaded`.
+1. Open your Valheim folder, the one with `valheim.exe` in it. In Steam, that's *right-click
+   Valheim → Manage → Browse local files*.
+2. Extract the zip straight into that folder. Windows' *Extract All* suggests a new folder named
+   after the zip, so delete that last part of the path before you extract.
+3. Check the result: `winhttp.dll`, `doorstop_config.ini` and the `BepInEx\` folder must sit
+   **right next to `valheim.exe`**. If they're one folder too deep, BepInEx never loads.
+4. Launch the game. To check it loaded, open `BepInEx\LogOutput.log` and look for
+   `Nearby Chests x.y.z loaded`.
+
+**Getting BepInEx from Thunderstore instead?** The
+[BepInExPack_Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/) zip has a
+`BepInExPack_Valheim` folder inside it. Copy what's *inside* that folder into your Valheim folder,
+not the top of the zip, which only holds Thunderstore's `manifest.json`, `icon.png` and README.
+Then extract the mod-only zip on top.
 
 To uninstall, delete `BepInEx\plugins\NearbyChests`. To remove BepInEx entirely, also delete
 `winhttp.dll` from the Valheim folder.
