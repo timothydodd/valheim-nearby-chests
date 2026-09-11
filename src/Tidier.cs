@@ -121,20 +121,26 @@ namespace NearbyChests
             inv.GetAllItems().Count(i => (ItemGroups.Of(i) ?? Junk) == category);
     }
 
-    /// <summary>Adds a "Tidy" button next to Take All / Stack in the chest window.</summary>
+    /// <summary>
+    /// Adds a small Tidy icon button to the chest window's title bar, just left of Place Stacks,
+    /// with a tooltip explaining it.
+    /// </summary>
     [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.Awake))]
     internal static class InventoryGui_Awake_TidyButton_Patch
     {
+        private const string Tooltip =
+            "Tidy: send items that don't belong in this chest to chests of their own kind, then sort it";
+
         private static void Postfix(InventoryGui __instance)
         {
             if (!Plugin.TidyButton.Value)
                 return;
 
             Button stack = __instance.m_stackAllButton;
-            Button takeAll = __instance.m_takeAllButton;
             if (stack == null)
                 return;
 
+            // Start from a copy of Place Stacks so the button background matches the game's style.
             GameObject clone = Object.Instantiate(stack.gameObject, stack.transform.parent);
             clone.name = "NearbyChests_Tidy";
 
@@ -146,17 +152,47 @@ namespace NearbyChests
                 Object.Destroy(pad);
             }
 
-            // Place it one button-width past Stack, using the same spacing as Take All -> Stack.
-            var stackRect = (RectTransform)stack.transform;
-            var cloneRect = (RectTransform)clone.transform;
-            Vector2 step = takeAll != null
-                ? stackRect.anchoredPosition - ((RectTransform)takeAll.transform).anchoredPosition
-                : new Vector2(stackRect.rect.width + 10f, 0f);
-            cloneRect.anchoredPosition = stackRect.anchoredPosition + step;
+            // Swap the text label for an icon, tinted like the text was.
+            Color tint = new Color(1f, 0.85f, 0.55f);
+            foreach (TMP_Text text in clone.GetComponentsInChildren<TMP_Text>(true))
+            {
+                tint = text.color;
+                text.gameObject.SetActive(false);
+            }
 
-            TMP_Text label = clone.GetComponentInChildren<TMP_Text>(true);
-            if (label != null)
-                label.text = "Tidy";
+            var rect = (RectTransform)clone.transform;
+            float size = ((RectTransform)stack.transform).rect.height;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, size);
+            rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size);
+
+            var icon = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+            var iconRect = (RectTransform)icon.transform;
+            iconRect.SetParent(rect, false);
+            iconRect.anchorMin = new Vector2(0.2f, 0.2f);
+            iconRect.anchorMax = new Vector2(0.8f, 0.8f);
+            iconRect.offsetMin = iconRect.offsetMax = Vector2.zero;
+            var image = icon.GetComponent<Image>();
+            image.sprite = TidyIcon.Create();
+            image.color = tint;
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+
+            // Hover tooltip, borrowing the game's tooltip template from any existing tooltip.
+            UITooltip template = __instance.GetComponentsInChildren<UITooltip>(true)
+                .FirstOrDefault(t => t.m_tooltipPrefab != null);
+            if (template != null)
+            {
+                UITooltip tooltip = clone.GetComponent<UITooltip>() ?? clone.AddComponent<UITooltip>();
+                tooltip.m_tooltipPrefab = template.m_tooltipPrefab;
+                tooltip.m_topic = "";
+                tooltip.m_text = Tooltip;
+            }
+
+            // Final position is worked out the first time the chest window is on screen (see below),
+            // once the UI has real sizes.
+            TidyButtonPlacement.Button = rect;
+            TidyButtonPlacement.Placed = false;
 
             Button button = clone.GetComponent<Button>();
             button.onClick = new Button.ButtonClickedEvent();
@@ -168,6 +204,87 @@ namespace NearbyChests
                 __instance.SetupDragItem(null, null, 1);
                 Tidier.TidyChest(__instance.m_currentContainer);
             });
+        }
+    }
+
+    /// <summary>
+    /// Puts the Tidy icon just left of Place Stacks, vertically centred on it. Measured in world space
+    /// so it lines up at any resolution or UI scale.
+    /// </summary>
+    [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.UpdateContainer))]
+    internal static class TidyButtonPlacement
+    {
+        internal static RectTransform Button;
+        internal static bool Placed;
+
+        private static readonly Vector3[] StackCorners = new Vector3[4];
+        private static readonly Vector3[] ButtonCorners = new Vector3[4];
+
+        private static void Postfix(InventoryGui __instance)
+        {
+            if (Placed || Button == null || __instance.m_container == null
+                || !__instance.m_container.gameObject.activeInHierarchy)
+                return;
+
+            var stackRect = (RectTransform)__instance.m_stackAllButton.transform;
+            Canvas.ForceUpdateCanvases();
+            stackRect.GetWorldCorners(StackCorners); // 0 bottom-left, 1 top-left, 2 top-right, 3 bottom-right
+            Button.GetWorldCorners(ButtonCorners);
+
+            float buttonWidth = ButtonCorners[2].x - ButtonCorners[1].x;
+            if (buttonWidth <= 0f)
+                return; // Not laid out yet; try again next frame.
+
+            float gap = buttonWidth * 0.15f;
+            float centreX = StackCorners[0].x - gap - buttonWidth / 2f;
+            float centreY = (StackCorners[0].y + StackCorners[1].y) / 2f;
+            Button.position = new Vector3(centreX, centreY, stackRect.position.z);
+            Placed = true;
+        }
+    }
+
+    /// <summary>Draws the Tidy icon (three left-aligned bars, shortest at the bottom) at runtime.</summary>
+    internal static class TidyIcon
+    {
+        private static Sprite _sprite;
+
+        public static Sprite Create()
+        {
+            if (_sprite != null)
+                return _sprite;
+
+            const int size = 32;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+            };
+            var clear = new Color(1f, 1f, 1f, 0f);
+            var pixels = new Color[size * size];
+            for (int i = 0; i < pixels.Length; i++)
+                pixels[i] = clear;
+
+            // Bars from top to bottom: full, three-quarter, half width. Texture rows start at the bottom.
+            int[] lengths = { 28, 20, 12 };
+            int barHeight = 5;
+            int[] tops = { 26, 16, 6 };
+            for (int b = 0; b < lengths.Length; b++)
+            {
+                for (int y = tops[b]; y < tops[b] + barHeight; y++)
+                {
+                    for (int x = 2; x < 2 + lengths[b]; x++)
+                    {
+                        // Soften the right-hand end of each bar a little.
+                        float alpha = x == 1 + lengths[b] ? 0.5f : 1f;
+                        pixels[y * size + x] = new Color(1f, 1f, 1f, alpha);
+                    }
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply();
+
+            _sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
+            return _sprite;
         }
     }
 }
