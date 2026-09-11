@@ -157,37 +157,64 @@ namespace NearbyChests
             return true;
         }
 
-        private static HashSet<string> _ingredients;
-        private static int _ingredientsFromRecipes = -1;
+        private static HashSet<string> _madeItems;
+        private static int _madeFromRecipes = -1;
 
         /// <summary>
-        /// Food, meads and potions: anything consumable that isn't also a crafting ingredient.
-        /// Raspberries or honey are edible but go into recipes, so they still stack.
+        /// Food, meads and potions: anything consumable that something in the game makes - a crafting
+        /// recipe, a cooking station or oven, or a fermenter. Berries, mushrooms or honey are edible but
+        /// are picked or harvested rather than made, so they count as ingredients and still stack.
+        /// (Checking "used in a recipe" instead doesn't work: stews and sausages are feast ingredients.)
         /// </summary>
         private static bool IsFood(ItemDrop.ItemData item)
         {
             if (item.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Consumable)
                 return false;
+            HashSet<string> made = MadeItems();
+            return made == null || made.Contains(item.m_shared.m_name);
+        }
 
+        /// <summary>Names of every item the game can produce. Null until the world has loaded.</summary>
+        private static HashSet<string> MadeItems()
+        {
             ObjectDB db = ObjectDB.instance;
-            if (db == null)
-                return true;
-            if (_ingredients == null || _ingredientsFromRecipes != db.m_recipes.Count)
+            ZNetScene scene = ZNetScene.instance;
+            if (db == null || scene == null)
+                return null;
+            if (_madeItems != null && _madeFromRecipes == db.m_recipes.Count)
+                return _madeItems;
+
+            var made = new HashSet<string>();
+            foreach (Recipe recipe in db.m_recipes)
+                AddMade(made, recipe != null ? recipe.m_item : null);
+
+            foreach (GameObject prefab in scene.m_prefabs)
             {
-                _ingredients = new HashSet<string>();
-                foreach (Recipe recipe in db.m_recipes)
-                {
-                    if (recipe == null || recipe.m_resources == null)
-                        continue;
-                    foreach (Piece.Requirement req in recipe.m_resources)
-                    {
-                        if (req.m_resItem != null)
-                            _ingredients.Add(req.m_resItem.m_itemData.m_shared.m_name);
-                    }
-                }
-                _ingredientsFromRecipes = db.m_recipes.Count;
+                if (prefab == null)
+                    continue;
+                CookingStation cooking = prefab.GetComponent<CookingStation>();
+                if (cooking != null)
+                    foreach (CookingStation.ItemConversion c in cooking.m_conversion)
+                        AddMade(made, c.m_to);
+                Fermenter fermenter = prefab.GetComponent<Fermenter>();
+                if (fermenter != null)
+                    foreach (Fermenter.ItemConversion c in fermenter.m_conversion)
+                        AddMade(made, c.m_to);
+                Smelter smelter = prefab.GetComponent<Smelter>();
+                if (smelter != null)
+                    foreach (Smelter.ItemConversion c in smelter.m_conversion)
+                        AddMade(made, c.m_to);
             }
-            return !_ingredients.Contains(item.m_shared.m_name);
+
+            _madeItems = made;
+            _madeFromRecipes = db.m_recipes.Count;
+            return made;
+        }
+
+        private static void AddMade(HashSet<string> made, ItemDrop item)
+        {
+            if (item != null)
+                made.Add(item.m_itemData.m_shared.m_name);
         }
 
         private static bool IsAmmo(ItemDrop.ItemData.ItemType type) =>

@@ -29,8 +29,8 @@ chests for you.
    contents sorted by type, then group, then name.
 
 Stacking leaves these in your inventory. Each has its own setting, and all are on by default:
-- **Food, meads and potions.** Edible items that are also used in a recipe (berries, mushrooms,
-  honey and so on) count as ingredients and still get stacked.
+- **Food, meads and potions:** anything cooked, baked, crafted or brewed. Edible things you pick or
+  harvest (berries, mushrooms, honey and so on) count as ingredients and still get stacked.
 - **Ammo:** arrows, bolts, bait.
 - **Equipment:** weapons, armor, shields, tools, torches, utility items, trinkets.
 - **Your hotbar** (the top row), and anything you have equipped.
@@ -83,7 +83,7 @@ After the first launch, settings are in `BepInEx\config\NearbyChests.cfg`:
 | Crafting | BuildFromChests      | true             | Use chest materials when building. |
 | Stacking | StackToNearby        | true             | Stack button pushes to all nearby chests. Turn off for the vanilla button. |
 | Stacking | KeepHotbar           | true             | Never stack items from the top row. |
-| Stacking | ExcludeFood          | true             | Never stack food, meads or potions. Recipe ingredients still stack. |
+| Stacking | ExcludeFood          | true             | Never stack food, meads or potions (anything cooked, crafted or brewed). Raw ingredients still stack. |
 | Stacking | ExcludeAmmo          | true             | Never stack arrows, bolts, bait or other ammo. |
 | Stacking | ExcludeEquipment     | true             | Never stack weapons, armor, shields, tools, torches, utility items or trinkets. |
 | Stacking | PlaceUnassignedItems | true             | Items with no home go to a chest of similar items, or an empty chest. |
@@ -145,8 +145,11 @@ button) and `Container.RPC_StackResponse` (holding Use on a chest). For each eli
 Chests that received items are then merged and sorted by type, group order, name, quality and stack
 size.
 
-**Food detection:** an item counts as food when it's a `Consumable` that doesn't appear as a
-requirement in any `ObjectDB` recipe. This works with modded recipes too.
+**Food detection:** an item counts as food when it's a `Consumable` that the game can produce, meaning
+it's the output of an `ObjectDB` recipe or of a `CookingStation` (including ovens), `Fermenter` or
+`Smelter` conversion. Raw edibles aren't produced by anything, so they stay ingredients. This works
+with modded recipes too. "Isn't a recipe ingredient" was tried first, but it fails because cooked
+dishes like deer stew and sausages are feast ingredients.
 
 ## Multiplayer
 

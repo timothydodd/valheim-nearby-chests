@@ -12,7 +12,7 @@ namespace NearbyChests
     {
         public const string Guid = "NearbyChests";
         public const string ModName = "Nearby Chests";
-        public const string Version = "1.0.0";
+        public const string Version = "1.0.1";
 
         internal static ManualLogSource Log;
 
@@ -56,8 +56,8 @@ namespace NearbyChests
             KeepHotbar = Config.Bind("Stacking", "KeepHotbar", true,
                 "Never stack items from your hotbar (the top row of your inventory).");
             ExcludeFood = Config.Bind("Stacking", "ExcludeFood", true,
-                "Never stack food, meads or potions you're carrying. Edible items that are used in a recipe " +
-                "(berries, mushrooms, honey...) count as ingredients and still get stacked.");
+                "Never stack food, meads or potions you're carrying - anything cooked, baked, crafted or brewed. " +
+                "Edible things you pick or harvest (berries, mushrooms, honey...) count as ingredients and still get stacked.");
             ExcludeAmmo = Config.Bind("Stacking", "ExcludeAmmo", true,
                 "Never stack arrows, bolts, bait or other ammo you're carrying.");
             ExcludeEquipment = Config.Bind("Stacking", "ExcludeEquipment", true,
