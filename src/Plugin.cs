@@ -12,7 +12,7 @@ namespace NearbyChests
     {
         public const string Guid = "NearbyChests";
         public const string ModName = "Nearby Chests";
-        public const string Version = "1.0.5";
+        public const string Version = "1.0.6";
 
         internal static ManualLogSource Log;
 
@@ -33,6 +33,7 @@ namespace NearbyChests
         internal static ConfigEntry<bool> FallbackToOpenChest;
         internal static ConfigEntry<bool> SortAfterStack;
         internal static ConfigEntry<bool> TidyButton;
+        internal static ConfigEntry<bool> TidyGathers;
         internal static ConfigEntry<bool> ShareChests;
 
         internal static readonly HashSet<ItemDrop.ItemData.ItemType> UnassignedTypes = new HashSet<ItemDrop.ItemData.ItemType>();
@@ -84,6 +85,10 @@ namespace NearbyChests
             ShareChests = Config.Bind("Stacking", "ShareChests", true,
                 "When a group has no chest of its own and there's no empty chest, let a chest that holds only one " +
                 "group take a second one, preferring related groups (neighbours in the groups file).");
+            TidyGathers = Config.Bind("Stacking", "TidyGathers", true,
+                "Tidy also pulls items of the open chest's category out of chests where they don't belong " +
+                "(a shared chest's second group, strays in another chest, the junk chest). Chests of the same " +
+                "category are left alone.");
             TidyButton = Config.Bind("Stacking", "TidyButton", true,
                 "Show a Tidy button in the chest window. It moves items that don't match the open chest's category " +
                 "to a nearby chest of their own category, an empty chest (which becomes that category's chest), " +

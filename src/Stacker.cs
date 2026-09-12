@@ -87,6 +87,7 @@ namespace NearbyChests
         /// <summary>
         /// Give an item with no home a place to live:
         /// 1. the chest holding the most items from the same group (metals, hides, same biome...),
+        ///    or, for items in no group at all, the catch-all chest,
         /// 2. otherwise an empty chest (the open one if it's empty, then the nearest),
         /// 3. otherwise a chest holding only one other group, which becomes a shared chest,
         /// 4. otherwise, if enabled, the open chest.
@@ -96,23 +97,25 @@ namespace NearbyChests
         {
             int moved = 0;
 
-            string group = ItemGroups.Of(item);
-            if (group != null)
-            {
+            // Ungrouped items share one catch-all chest, so a chest that's mostly ungrouped counts as
+            // their home. Without that they'd only ever match on stray ungrouped items sitting in a
+            // proper chest, and each new one would claim an empty chest of its own.
+            string group = Tidier.GroupOf(item);
+            var similar = (group == Tidier.Junk
+                    ? chests.Where(c => Tidier.Category(c.GetInventory()) == Tidier.Junk)
+                    : chests)
                 // chests is already open-chest-first then nearest, and OrderByDescending is stable,
                 // so ties go to the closer chest.
-                var similar = chests
-                    .Select(c => new { Chest = c, Score = GroupScore(c.GetInventory(), group) })
-                    .Where(x => x.Score > 0)
-                    .OrderByDescending(x => x.Score)
-                    .Select(x => x.Chest)
-                    .ToList();
-                foreach (Container c in similar)
-                {
-                    moved += MoveInto(c, item, from, touched);
-                    if (!from.ContainsItem(item))
-                        return moved;
-                }
+                .Select(c => new { Chest = c, Score = GroupScore(c.GetInventory(), group) })
+                .Where(x => x.Score > 0)
+                .OrderByDescending(x => x.Score)
+                .Select(x => x.Chest)
+                .ToList();
+            foreach (Container c in similar)
+            {
+                moved += MoveInto(c, item, from, touched);
+                if (!from.ContainsItem(item))
+                    return moved;
             }
 
             foreach (Container c in chests)
@@ -136,13 +139,13 @@ namespace NearbyChests
             return moved;
         }
 
-        /// <summary>How many stacks in the inventory belong to the group.</summary>
+        /// <summary>How many stacks in the inventory belong to the group (Junk for ungrouped items).</summary>
         internal static int GroupScore(Inventory inv, string group)
         {
             int score = 0;
             foreach (ItemDrop.ItemData i in inv.GetAllItems())
             {
-                if (ItemGroups.Of(i) == group)
+                if (Tidier.GroupOf(i) == group)
                     score++;
             }
             return score;

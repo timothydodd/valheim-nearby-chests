@@ -19,7 +19,8 @@ chests for you.
    looks for somewhere similar:
    1. **A chest with similar items.** It picks the nearby chest holding the most items from the same
       group: metals, hides, wood, stone, raw ingredients, plants, cooked food, seeds, trophies, or
-      materials from the same biome (Meadows, Black Forest, Swamp, and so on).
+      materials from the same biome (Black Forest, Mountains and Swamp, Plains and Ocean, and so on).
+      Items in no group at all share a single **catch-all chest** rather than taking a chest each.
    2. **An empty chest.** If no chest has anything from that group, the item goes into an empty
       chest. The one you're using comes first if it's empty, then the nearest. That chest becomes
       the group's home next time.
@@ -39,9 +40,13 @@ chests for you.
      second one, preferring a related group (the one listed next to it in the groups file, so Raw
      pairs with Plants and Wood with Stone). A chest holding exactly two groups counts as home for
      both, so Tidy leaves it alone.
-   - Failing that, it goes to a **junk chest**: a chest that's mostly uncategorized items (materials
+   - Failing that, it goes to the **catch-all chest**: a chest that's mostly uncategorized items (materials
      that aren't in any group).
    - Anything left over stays where it is.
+   - It also **gathers strays**: items of this chest's category are pulled in from chests where they
+     don't belong (a shared chest's second group, a few bars in the wood chest, the catch-all chest).
+     Other chests of the same category are left alone, so two chests for one group don't raid each
+     other.
    - Afterwards the chest is sorted.
 
 Stacking leaves these in your inventory. Each has its own setting, and all are on by default:
@@ -109,11 +114,12 @@ After the first launch, settings are in `BepInEx\config\NearbyChests.cfg`:
 | Stacking | ExcludeAmmo          | true             | Never stack arrows, bolts, bait or other ammo. |
 | Stacking | ExcludeEquipment     | true             | Never stack weapons, armor, shields, tools, torches, utility items or trinkets. |
 | Stacking | PlaceUnassignedItems | true             | Items with no home go to a chest of similar items, or an empty chest. |
-| Stacking | UnassignedItemTypes  | Material,Trophy  | Item types placed even when not in the groups file. Other options: Consumable, Ammo, AmmoNonEquipable, Fish, Misc. |
+| Stacking | UnassignedItemTypes  | Material,Trophy  | Item types placed even when not in the groups file. They share the catch-all chest. Other options: Consumable, Ammo, AmmoNonEquipable, Fish, Misc. |
 | Stacking | FallbackToOpenChest  | false            | If there's no similar or empty chest, use the open chest instead of leaving items in your inventory. |
 | Stacking | SortAfterStack       | true             | Sort and merge chests that received items. |
 | Stacking | ShareChests          | true             | When a group has no chest and there's no empty chest, let a one-group chest take a second, related group. |
 | Stacking | TidyButton           | true             | Show the Tidy button in the chest window (restart to apply). |
+| Stacking | TidyGathers          | true             | Tidy also pulls stray items of this chest's category in from other chests. |
 
 ### Item groups
 
@@ -162,8 +168,9 @@ ask many times per frame.
 button) and `Container.RPC_StackResponse` (holding Use on a chest). For each eligible item the mod:
 
 1. fills chests that already contain it,
-2. fills the chest holding the most items from the same group (`ItemGroups.cs`),
-3. fills an empty chest,
+2. fills the chest holding the most items from the same group (`ItemGroups.cs`), or, for items in no
+   group, the catch-all chest (the one that's mostly ungrouped items),
+3. fills an empty chest, which becomes that group's chest - or the catch-all chest - from then on,
 4. optionally falls back to the open chest (`FallbackToOpenChest`).
 
 Chests that received items are then merged and sorted by type, group order, name, quality and stack
@@ -182,6 +189,9 @@ move to:
 2. an empty chest, which takes on that category,
 3. a one-group chest, which becomes a shared chest (closest group in file order first),
 4. junk chests.
+
+Then it gathers: items of the chest's own category are pulled out of every nearby chest whose own
+category differs, which covers shared chests, strays and junk chests.
 
 A chest holding exactly two groups keeps its second group when there's no better home, so shared
 chests don't bounce items back and forth. A junk chest never passes items on to another junk chest,

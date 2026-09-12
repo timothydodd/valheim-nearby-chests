@@ -29,7 +29,7 @@ namespace NearbyChests
 # - If an item is listed in more than one group, the first group wins, so order matters.
 # - Items not listed here are only placed if their type is in UnassignedItemTypes in the main
 #   config. They're grouped by item type (all trophies together, and so on), except materials,
-#   which go into an empty chest.
+#   which all share one catch-all chest rather than taking a chest each.
 # - Delete this file to get the latest defaults back.
 # Save the file and the change applies the next time you stack; no restart needed.
 
@@ -48,8 +48,7 @@ Trophies = Trophy*
 
 BlackForest = BoneFragments, GreydwarfEye, SurtlingCore, AncientSeed, Resin, Feathers, QueenBee, HardAntler
 MountainsSwamp = Guck, Ooze, Root, WitheredBone, Crystal, FreezeGland, WolfFang, WolfClaw, DragonTear, PowderedDragonEgg
-Plains = Flax, LinenThread, Needle, Tar
-Ocean = Chitin
+PlainsOcean = Flax, LinenThread, Needle, Tar, Chitin
 Mistlands = Sap, Softtissue, Carapace, Mandible, Eitr, Bilebag, GiantBloodSack, Wisp, DvergrNeedle, BlackCore
 Ashlands = AskBladder, CharcoalResin, CharredBone, Charredskull, CelestialFeather, MoltenCore, MorgenHeart, MorgenSinew, ProustitePowder, SulfurStone, BonemawSerpentTooth, GemstoneRed, GemstoneGreen, GemstoneBlue, AsksvinCarrionNeck, AsksvinCarrionPelvic, AsksvinCarrionRibcage, AsksvinCarrionSkull
 DeepNorth = BjornPaw, MooseSinew, Ice, FrozenFuel, OozeMork, ElakingHairBundle, UndeadBjornRibcage, BarkaBranch

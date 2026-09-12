@@ -71,6 +71,8 @@ namespace NearbyChests
                 }
             }
 
+            int gathered = Plugin.TidyGathers.Value ? Gather(opened, own, others, touched) : 0;
+
             from.Changed();
             Stacker.Sort(from);
             foreach (Container c in touched)
@@ -79,16 +81,59 @@ namespace NearbyChests
                 InventoryGui.instance.m_moveItemEffects.Create(c.transform.position, Quaternion.identity);
             }
 
-            string message;
+            var parts = new List<string>();
             if (moved > 0)
-                message = $"Moved {moved} items into {touched.Count} {(touched.Count == 1 ? "chest" : "chests")}";
+                parts.Add($"sent out {moved}");
+            if (gathered > 0)
+                parts.Add($"brought in {gathered}");
+            string message;
+            if (parts.Count > 0)
+                message = $"Tidied: {string.Join(", ", parts)} items";
             else if (stayed > 0)
                 message = "Sorted - nothing had a better chest to go to";
             else
                 message = "Sorted - everything here belongs";
-            if (moved > 0 && stayed > 0)
+            if (parts.Count > 0 && stayed > 0)
                 message += $"\n{stayed} {(stayed == 1 ? "stack" : "stacks")} had nowhere else to go, so stayed";
             player.Message(MessageHud.MessageType.Center, message);
+        }
+
+        /// <summary>
+        /// Round up strays: pull items of this chest's category out of chests where they're the odd ones
+        /// out (a shared chest's second group, a few bars in the wood chest, the junk chest). Chests whose
+        /// own category is the same are left alone, so two chests for one group don't raid each other.
+        /// </summary>
+        private static int Gather(Container opened, string category, List<Container> others,
+            HashSet<Container> touched)
+        {
+            if (category == null || category == Junk)
+                return 0;
+
+            int gathered = 0;
+            foreach (Container source in others)
+            {
+                Inventory from = source.GetInventory();
+                if (Category(from) == category || !ChestFinder.EnsureOwner(source))
+                    continue;
+
+                bool changed = false;
+                foreach (ItemDrop.ItemData item in from.GetAllItems().ToList())
+                {
+                    if (GroupOf(item) != category)
+                        continue;
+                    int placed = Stacker.MoveInto(opened, item, from, touched);
+                    if (placed > 0)
+                        changed = true;
+                    gathered += placed;
+                }
+
+                if (changed)
+                {
+                    touched.Add(source);
+                    from.Changed();
+                }
+            }
+            return gathered;
         }
 
         internal static string GroupOf(ItemDrop.ItemData item) => ItemGroups.Of(item) ?? Junk;
