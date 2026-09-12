@@ -16,6 +16,7 @@ namespace NearbyChests
         private static readonly Dictionary<string, int> CountCache = new Dictionary<string, int>();
         private static float _cachedAt = -1000f;
         private static Vector3 _cachedPos;
+        private static float _cachedRange = -1f;
 
         public static void Register(Container container) => Known.Add(container);
 
@@ -29,19 +30,22 @@ namespace NearbyChests
         /// <summary>A chest's contents changed; the list of chests is still valid.</summary>
         public static void InvalidateCounts() => CountCache.Clear();
 
-        public static List<Container> GetNearby(Player player)
+        /// <summary>Chests within <paramref name="range"/> meters, closest first.</summary>
+        public static List<Container> GetNearby(Player player, float range)
         {
             Vector3 pos = player.transform.position;
-            if (Time.time - _cachedAt < CacheSeconds && (pos - _cachedPos).sqrMagnitude < 1f)
+            if (Time.time - _cachedAt < CacheSeconds && range == _cachedRange
+                && (pos - _cachedPos).sqrMagnitude < 1f)
                 return Nearby;
 
             _cachedAt = Time.time;
             _cachedPos = pos;
+            _cachedRange = range;
             CountCache.Clear();
             Nearby.Clear();
             Known.RemoveWhere(c => c == null);
 
-            float rangeSq = Plugin.Range.Value * Plugin.Range.Value;
+            float rangeSq = range * range;
             long playerId = Game.instance.GetPlayerProfile().GetPlayerID();
             foreach (Container c in Known)
             {
@@ -106,7 +110,7 @@ namespace NearbyChests
 
         public static int Count(Player player, string name, int quality, bool matchWorldLevel)
         {
-            List<Container> chests = GetNearby(player);
+            List<Container> chests = GetNearby(player, Plugin.CraftingRange.Value);
             string key = name + "|" + quality + "|" + matchWorldLevel;
             if (CountCache.TryGetValue(key, out int cached))
                 return cached;
@@ -120,7 +124,7 @@ namespace NearbyChests
 
         public static bool Have(Player player, string name, bool matchWorldLevel)
         {
-            foreach (Container c in GetNearby(player))
+            foreach (Container c in GetNearby(player, Plugin.CraftingRange.Value))
             {
                 if (c.GetInventory().HaveItem(name, matchWorldLevel))
                     return true;
@@ -130,7 +134,7 @@ namespace NearbyChests
 
         public static ItemDrop.ItemData Find(Player player, string name, int quality)
         {
-            foreach (Container c in GetNearby(player))
+            foreach (Container c in GetNearby(player, Plugin.CraftingRange.Value))
             {
                 ItemDrop.ItemData item = c.GetInventory().GetItem(name, quality);
                 if (item != null)
@@ -142,7 +146,7 @@ namespace NearbyChests
         /// <summary>Remove up to <paramref name="amount"/> matching items from nearby chests, closest first.</summary>
         public static void Remove(Player player, string name, int amount, int quality, bool worldLevelBased)
         {
-            foreach (Container c in GetNearby(player))
+            foreach (Container c in GetNearby(player, Plugin.CraftingRange.Value))
             {
                 if (amount <= 0)
                     break;

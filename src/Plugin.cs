@@ -12,12 +12,13 @@ namespace NearbyChests
     {
         public const string Guid = "NearbyChests";
         public const string ModName = "Nearby Chests";
-        public const string Version = "1.0.4";
+        public const string Version = "1.0.5";
 
         internal static ManualLogSource Log;
 
-        internal static ConfigEntry<float> Range;
         internal static ConfigEntry<bool> IncludeCartsAndShips;
+        internal static ConfigEntry<float> CraftingRange;
+        internal static ConfigEntry<float> StackingRange;
 
         internal static ConfigEntry<bool> CraftFromChests;
         internal static ConfigEntry<bool> BuildFromChests;
@@ -42,17 +43,20 @@ namespace NearbyChests
         {
             Log = Logger;
 
-            Range = Config.Bind("General", "Range", 20f,
-                new ConfigDescription("How far (in meters) from you a chest can be and still count as nearby.",
-                    new AcceptableValueRange<float>(3f, 60f)));
             IncludeCartsAndShips = Config.Bind("General", "IncludeCartsAndShips", false,
                 "Also use the storage in nearby carts and ships.");
 
+            CraftingRange = Config.Bind("Crafting", "CraftingRange", 20f,
+                new ConfigDescription("How far (in meters) a chest can be and still be used for crafting, upgrading and building.",
+                    new AcceptableValueRange<float>(3f, 60f)));
             CraftFromChests = Config.Bind("Crafting", "CraftFromChests", true,
                 "Use materials from nearby chests when crafting and upgrading at a station.");
             BuildFromChests = Config.Bind("Crafting", "BuildFromChests", true,
                 "Use materials from nearby chests when building with the hammer/hoe/cultivator.");
 
+            StackingRange = Config.Bind("Stacking", "StackingRange", 10f,
+                new ConfigDescription("How far (in meters) a chest can be and still be used by Stack, Tidy and sorting.",
+                    new AcceptableValueRange<float>(3f, 60f)));
             StackToNearby = Config.Bind("Stacking", "StackToNearby", true,
                 "When you press the Stack button on an open chest, send your items to every nearby chest that already holds that item.");
             KeepHotbar = Config.Bind("Stacking", "KeepHotbar", true,
@@ -89,7 +93,8 @@ namespace NearbyChests
             ParseUnassignedTypes();
             ItemGroups.Load();
             UnassignedItemTypes.SettingChanged += (_, __) => ParseUnassignedTypes();
-            Range.SettingChanged += (_, __) => ChestFinder.Invalidate();
+            CraftingRange.SettingChanged += (_, __) => ChestFinder.Invalidate();
+            StackingRange.SettingChanged += (_, __) => ChestFinder.Invalidate();
             IncludeCartsAndShips.SettingChanged += (_, __) => ChestFinder.Invalidate();
 
             _harmony = new Harmony(Guid);

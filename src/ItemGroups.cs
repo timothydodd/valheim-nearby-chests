@@ -46,10 +46,8 @@ Cooked = Cooked*, BakedPoteitr, BlackSoup, BloodPudding, BoarJerky, Bread, Carro
 Valuables = Amber, AmberPearl, Ruby, SilverNecklace, AncientCoin, AncientGemstone*, CrownJewel
 Trophies = Trophy*
 
-Meadows = Resin, Feathers, QueenBee, HardAntler
-BlackForest = BoneFragments, GreydwarfEye, SurtlingCore, AncientSeed
-Swamp = Guck, Ooze, Root, WitheredBone
-Mountains = Crystal, FreezeGland, WolfFang, WolfClaw, DragonTear, PowderedDragonEgg
+BlackForest = BoneFragments, GreydwarfEye, SurtlingCore, AncientSeed, Resin, Feathers, QueenBee, HardAntler
+MountainsSwamp = Guck, Ooze, Root, WitheredBone, Crystal, FreezeGland, WolfFang, WolfClaw, DragonTear, PowderedDragonEgg
 Plains = Flax, LinenThread, Needle, Tar
 Ocean = Chitin
 Mistlands = Sap, Softtissue, Carapace, Mandible, Eitr, Bilebag, GiantBloodSack, Wisp, DvergrNeedle, BlackCore

@@ -34,7 +34,7 @@ namespace NearbyChests
 
             ItemGroups.ReloadIfChanged();
             ChestFinder.Invalidate();
-            var others = ChestFinder.GetNearby(player).Where(c => c != opened).ToList();
+            var others = ChestFinder.GetNearby(player, Plugin.StackingRange.Value).Where(c => c != opened).ToList();
 
             Inventory from = opened.GetInventory();
             string own = Category(from);

@@ -9,12 +9,12 @@ chests for you.
 ## Features
 
 1. **Craft and build from nearby chests.** Workbench/forge recipes, upgrades, and hammer builds
-   can use materials sitting in chests within range (20 m by default). The requirement counts in the
+   can use materials sitting in chests within reach (20 m by default). The requirement counts in the
    crafting panel and build menu include those chests. Items you carry are spent first. After that the
    rest comes from the closest chests.
 2. **Stack to every nearby chest.** With a chest open, pressing **Stack** (or holding **E** on a
    chest) sends each stackable item in your inventory to every nearby chest that already holds
-   that item. The chest you're using gets first pick.
+   that item (10 m by default). The chest you're using gets first pick.
 3. **New items find a home.** If no nearby chest holds an item yet (or its chests are full), the mod
    looks for somewhere similar:
    1. **A chest with similar items.** It picks the nearby chest holding the most items from the same
@@ -58,6 +58,10 @@ Chests the mod never touches:
 - Chests another player has open.
 - Chests you can't open yourself (private, or behind someone else's ward).
 
+Crafting and stacking have separate ranges: `CraftingRange` (20 m) covers crafting, upgrading and
+building, while `StackingRange` (10 m) covers Stack, Tidy and sorting, so putting things away only
+touches the chests around you.
+
 Carts and ships are off by default.
 
 ## Install
@@ -93,10 +97,12 @@ After the first launch, settings are in `BepInEx\config\NearbyChests.cfg`:
 
 | Section  | Setting              | Default          | What it does |
 |----------|----------------------|------------------|--------------|
-| General  | Range                | 20               | Distance in meters that counts as "nearby" (3–60). |
+
 | General  | IncludeCartsAndShips | false            | Also use cart and ship storage. |
+| Crafting | CraftingRange        | 20               | Distance in meters a chest can be and still be used for crafting, upgrading and building (3–60). |
 | Crafting | CraftFromChests      | true             | Use chest materials at crafting stations. |
 | Crafting | BuildFromChests      | true             | Use chest materials when building. |
+| Stacking | StackingRange        | 10               | Distance in meters a chest can be and still be used by Stack, Tidy and sorting (3–60). |
 | Stacking | StackToNearby        | true             | Stack button pushes to all nearby chests. Turn off for the vanilla button. |
 | Stacking | KeepHotbar           | true             | Never stack items from the top row. |
 | Stacking | ExcludeFood          | true             | Never stack food, meads or potions (anything cooked, crafted or brewed). Raw ingredients still stack. |

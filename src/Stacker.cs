@@ -23,7 +23,7 @@ namespace NearbyChests
             // The open chest gets first pick, then the rest nearest-first.
             ChestFinder.Invalidate();
             var chests = new List<Container> { opened };
-            foreach (Container c in ChestFinder.GetNearby(player))
+            foreach (Container c in ChestFinder.GetNearby(player, Plugin.StackingRange.Value))
             {
                 if (c != opened)
                     chests.Add(c);
