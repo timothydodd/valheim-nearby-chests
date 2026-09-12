@@ -100,8 +100,12 @@ namespace NearbyChests
 
         /// <summary>
         /// Round up strays: pull items of this chest's category out of chests where they're the odd ones
-        /// out (a shared chest's second group, a few bars in the wood chest, the junk chest). Chests whose
-        /// own category is the same are left alone, so two chests for one group don't raid each other.
+        /// out (a shared chest's second group, a few bars in the wood chest, the catch-all chest).
+        ///
+        /// Another chest of the same category is drained too, so a group that ended up split over two
+        /// chests (Needles in one, Chitin in the other) merges into one. The chest holding the most of
+        /// the category keeps it, and the open chest wins ties. Gathering only widens that lead, so a
+        /// later tidy of the other chest can never pull the items back.
         /// </summary>
         private static int Gather(Container opened, string category, List<Container> others,
             HashSet<Container> touched)
@@ -109,11 +113,15 @@ namespace NearbyChests
             if (category == null || category == Junk)
                 return 0;
 
+            Inventory to = opened.GetInventory();
             int gathered = 0;
             foreach (Container source in others)
             {
                 Inventory from = source.GetInventory();
-                if (Category(from) == category || !ChestFinder.EnsureOwner(source))
+                if (Category(from) == category
+                    && CategoryCount(from, category) > CategoryCount(to, category))
+                    continue;
+                if (!ChestFinder.EnsureOwner(source))
                     continue;
 
                 bool changed = false;

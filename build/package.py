@@ -14,6 +14,7 @@ import zipfile
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DLL = os.path.join(ROOT, "bin", "Release", "NearbyChests.dll")
 README = os.path.join(ROOT, "README.md")
+CHANGELOG = os.path.join(ROOT, "CHANGELOG.md")
 PLUGIN_DIR = "BepInEx/plugins/NearbyChests/"
 PACK_PREFIX = "BepInExPack_Valheim/"
 
@@ -21,6 +22,7 @@ PACK_PREFIX = "BepInExPack_Valheim/"
 def add_mod(z):
     z.write(DLL, PLUGIN_DIR + "NearbyChests.dll")
     z.write(README, PLUGIN_DIR + "README.md")
+    z.write(CHANGELOG, PLUGIN_DIR + "CHANGELOG.md")
 
 
 def main():

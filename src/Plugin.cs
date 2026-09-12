@@ -12,7 +12,7 @@ namespace NearbyChests
     {
         public const string Guid = "NearbyChests";
         public const string ModName = "Nearby Chests";
-        public const string Version = "1.0.6";
+        public const string Version = "1.0.7";
 
         internal static ManualLogSource Log;
 
@@ -22,6 +22,7 @@ namespace NearbyChests
 
         internal static ConfigEntry<bool> CraftFromChests;
         internal static ConfigEntry<bool> BuildFromChests;
+        internal static ConfigEntry<bool> StationsFromChests;
 
         internal static ConfigEntry<bool> StackToNearby;
         internal static ConfigEntry<bool> KeepHotbar;
@@ -47,15 +48,20 @@ namespace NearbyChests
             IncludeCartsAndShips = Config.Bind("General", "IncludeCartsAndShips", false,
                 "Also use the storage in nearby carts and ships.");
 
-            CraftingRange = Config.Bind("Crafting", "CraftingRange", 20f,
+            CraftingRange = Config.Bind("Crafting", "CraftingRange", 30f,
                 new ConfigDescription("How far (in meters) a chest can be and still be used for crafting, upgrading and building.",
                     new AcceptableValueRange<float>(3f, 60f)));
             CraftFromChests = Config.Bind("Crafting", "CraftFromChests", true,
                 "Use materials from nearby chests when crafting and upgrading at a station.");
             BuildFromChests = Config.Bind("Crafting", "BuildFromChests", true,
                 "Use materials from nearby chests when building with the hammer/hoe/cultivator.");
+            StationsFromChests = Config.Bind("Crafting", "StationsFromChests", true,
+                "Take fuel and ore from nearby chests when feeding a station you aren't carrying them for: " +
+                "coal and ore into smelters and kilns, wood into fires, fuel into cooking stations. " +
+                "One press still adds one item, as in vanilla. Food and mead stay manual, because a " +
+                "cooking station or fermenter takes several different items and the mod would pick for you.");
 
-            StackingRange = Config.Bind("Stacking", "StackingRange", 10f,
+            StackingRange = Config.Bind("Stacking", "StackingRange", 15f,
                 new ConfigDescription("How far (in meters) a chest can be and still be used by Stack, Tidy and sorting.",
                     new AcceptableValueRange<float>(3f, 60f)));
             StackToNearby = Config.Bind("Stacking", "StackToNearby", true,

@@ -9,13 +9,18 @@ chests for you.
 ## Features
 
 1. **Craft and build from nearby chests.** Workbench/forge recipes, upgrades, and hammer builds
-   can use materials sitting in chests within reach (20 m by default). The requirement counts in the
+   can use materials sitting in chests within reach (30 m by default). The requirement counts in the
    crafting panel and build menu include those chests. Items you carry are spent first. After that the
    rest comes from the closest chests.
-2. **Stack to every nearby chest.** With a chest open, pressing **Stack** (or holding **E** on a
+2. **Feed stations from chests.** Coal and ore into smelters and kilns, wood into fires and
+   hearths, fuel into cooking stations and ovens. If you're not carrying it, it comes out of a nearby
+   chest within crafting range. One press adds one item, the same as vanilla. Food and mead stay
+   manual: a cooking station takes several different dishes and a fermenter one mead base at a time,
+   so the mod would be picking for you.
+3. **Stack to every nearby chest.** With a chest open, pressing **Stack** (or holding **E** on a
    chest) sends each stackable item in your inventory to every nearby chest that already holds
-   that item (10 m by default). The chest you're using gets first pick.
-3. **New items find a home.** If no nearby chest holds an item yet (or its chests are full), the mod
+   that item (15 m by default). The chest you're using gets first pick.
+4. **New items find a home.** If no nearby chest holds an item yet (or its chests are full), the mod
    looks for somewhere similar:
    1. **A chest with similar items.** It picks the nearby chest holding the most items from the same
       group: metals, hides, wood, stone, raw ingredients, plants, cooked food, seeds, trophies, or
@@ -28,9 +33,9 @@ chests for you.
       as a second one, preferring a related group.
    4. **Your inventory.** If there's still nowhere to go, the item stays with you, and the on-screen
       message tells you how many were left over.
-4. **Tidy chests.** Every chest that receives items gets its partial stacks merged and its
+5. **Tidy chests.** Every chest that receives items gets its partial stacks merged and its
    contents sorted by type, then group, then name.
-5. **Tidy button.** The chest window gets a small **Tidy** icon (three bars) just left of Place
+6. **Tidy button.** The chest window gets a small **Tidy** icon (three bars) just left of Place
    stacks. It cleans out the chest you have open:
    - The chest's category is whichever group it holds the most of, for example Metals.
    - Anything that doesn't match moves to a nearby chest of its own category.
@@ -45,8 +50,8 @@ chests for you.
    - Anything left over stays where it is.
    - It also **gathers strays**: items of this chest's category are pulled in from chests where they
      don't belong (a shared chest's second group, a few bars in the wood chest, the catch-all chest).
-     Other chests of the same category are left alone, so two chests for one group don't raid each
-     other.
+     A group split over two chests is merged: whichever chest holds the most of it keeps it, and the
+     chest you have open wins a tie.
    - Afterwards the chest is sorted.
 
 Stacking leaves these in your inventory. Each has its own setting, and all are on by default:
@@ -63,8 +68,8 @@ Chests the mod never touches:
 - Chests another player has open.
 - Chests you can't open yourself (private, or behind someone else's ward).
 
-Crafting and stacking have separate ranges: `CraftingRange` (20 m) covers crafting, upgrading and
-building, while `StackingRange` (10 m) covers Stack, Tidy and sorting, so putting things away only
+Crafting and stacking have separate ranges: `CraftingRange` (30 m) covers crafting, upgrading and
+building, while `StackingRange` (15 m) covers Stack, Tidy and sorting, so putting things away only
 touches the chests around you.
 
 Carts and ships are off by default.
@@ -104,10 +109,11 @@ After the first launch, settings are in `BepInEx\config\NearbyChests.cfg`:
 |----------|----------------------|------------------|--------------|
 
 | General  | IncludeCartsAndShips | false            | Also use cart and ship storage. |
-| Crafting | CraftingRange        | 20               | Distance in meters a chest can be and still be used for crafting, upgrading and building (3–60). |
+| Crafting | CraftingRange        | 30               | Distance in meters a chest can be and still be used for crafting, upgrading and building (3–60). |
 | Crafting | CraftFromChests      | true             | Use chest materials at crafting stations. |
 | Crafting | BuildFromChests      | true             | Use chest materials when building. |
-| Stacking | StackingRange        | 10               | Distance in meters a chest can be and still be used by Stack, Tidy and sorting (3–60). |
+| Crafting | StationsFromChests   | true             | Take fuel and ore from chests when feeding smelters, kilns, fires and cooking stations. Food and mead stay manual. |
+| Stacking | StackingRange        | 15               | Distance in meters a chest can be and still be used by Stack, Tidy and sorting (3–60). |
 | Stacking | StackToNearby        | true             | Stack button pushes to all nearby chests. Turn off for the vanilla button. |
 | Stacking | KeepHotbar           | true             | Never stack items from the top row. |
 | Stacking | ExcludeFood          | true             | Never stack food, meads or potions (anything cooked, crafted or brewed). Raw ingredients still stack. |
@@ -164,6 +170,17 @@ recipe changes in game updates mostly just work. Nearby chest lookups and item c
 a second and invalidated whenever a chest's contents change, because the crafting and build menus
 ask many times per frame.
 
+**Feeding stations** (`StationPatches.cs`) needs no station logic of its own, because adding fuel or
+ore is the game asking the player's inventory "do you have this?" and then "take one" - the same
+calls the crafting scope already extends to chests. The mod marks the station interaction
+(`Switch.Interact`/`UseItem`, which covers smelters, kilns, windmills, spinning wheels, eitr
+refineries, shield generators and the cooking station's fuel switch, plus `Fireplace` directly) and
+lets those patches do the rest. A cooking station's add-food switch is skipped, and `CookingStation`
+and `Fermenter` aren't patched at all, so food and mead stay manual. Ore is the exception: the game
+finds it with `Inventory.GetItem(name)` and spends it with `RemoveItem(item, 1)`, passing the item
+instance. When the fallback hands back an item living in a chest, that call would find nothing to
+remove, so a patch on the instance overloads removes it from the chest it actually came from.
+
 **Stacking** replaces the game's stack action where it's triggered: `InventoryGui.OnStackAll` (the
 button) and `Container.RPC_StackResponse` (holding Use on a chest). For each eligible item the mod:
 
@@ -191,7 +208,9 @@ move to:
 4. junk chests.
 
 Then it gathers: items of the chest's own category are pulled out of every nearby chest whose own
-category differs, which covers shared chests, strays and junk chests.
+category differs, which covers shared chests, strays and junk chests. Another chest of the same
+category is drained too, unless it holds more of the category than the open one, so a split group
+merges into one chest and can't bounce back on the next tidy.
 
 A chest holding exactly two groups keeps its second group when there's no better home, so shared
 chests don't bounce items back and forth. A junk chest never passes items on to another junk chest,
@@ -253,8 +272,10 @@ On every push and pull request, [the build workflow](.github/workflows/build.yml
 
 To publish a release:
 1. Bump `Version` in `src/Plugin.cs`.
-2. Commit and push.
-3. Tag and push the tag:
+2. Add a `## <version> - <date>` section to `CHANGELOG.md`. The workflow uses it as the release
+   notes and fails the release if the section is missing.
+3. Commit and push.
+4. Tag and push the tag:
    ```
    git tag v1.0.1 && git push origin v1.0.1
    ```

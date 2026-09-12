@@ -15,9 +15,11 @@ namespace NearbyChests
         internal static int Craft;
         internal static int Build;
         internal static int Consume;
+        internal static int Station;
 
         internal static bool Counting =>
-            (Craft > 0 && Plugin.CraftFromChests.Value) || (Build > 0 && Plugin.BuildFromChests.Value);
+            (Craft > 0 && Plugin.CraftFromChests.Value) || (Build > 0 && Plugin.BuildFromChests.Value)
+            || Station > 0;
 
         internal static bool IsLocalPlayerInventory(Inventory inv, out Player player)
         {
