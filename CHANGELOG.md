@@ -3,6 +3,13 @@
 Notable changes in each release. The section for a tagged version becomes that release's notes on
 GitHub, so keep the headings as `## <version> - <date>`.
 
+## 1.0.8 - 2026-09-13
+
+**Group tweaks.** Feathers and Bone Fragments now live with the hides. Bear Paw (`BjornPaw`) and
+Ectoplasm are in the Black Forest group, and Chain has moved from the metals to the swamp group.
+Existing groups files keep what they have; delete `NearbyChests.groups.txt` to pick up the new
+defaults.
+
 ## 1.0.7 - 2026-09-12
 
 **Feed stations from chests.** Coal and ore into smelters and kilns, wood into fires and hearths,

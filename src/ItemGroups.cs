@@ -33,8 +33,8 @@ namespace NearbyChests
 # - Delete this file to get the latest defaults back.
 # Save the file and the change applies the next time you stack; no restart needed.
 
-Metals = CopperOre, Copper, CopperScrap, TinOre, Tin, Bronze, BronzeScrap, BronzeNails, IronOre, IronScrap, Iron, IronNails, SilverOre, Silver, BlackMetalScrap, BlackMetal, FlametalOre, Flametal, FlametalOreNew, FlametalNew, GoldOre, Gold, Coal, Chain, MechanicalSpring, CharredCogwheel
-Hides = LeatherScraps, DeerHide, TrollHide, WolfPelt, LoxPelt, ScaleHide, AskHide, MooseHide, BjornHide, SealHide, SerpentScale, BonemawSerpentScale, Leatherstraps
+Metals = CopperOre, Copper, CopperScrap, TinOre, Tin, Bronze, BronzeScrap, BronzeNails, IronOre, IronScrap, Iron, IronNails, SilverOre, Silver, BlackMetalScrap, BlackMetal, FlametalOre, Flametal, FlametalOreNew, FlametalNew, GoldOre, Gold, Coal, MechanicalSpring, CharredCogwheel
+Hides = LeatherScraps, DeerHide, TrollHide, WolfPelt, LoxPelt, ScaleHide, AskHide, MooseHide, BjornHide, SealHide, SerpentScale, BonemawSerpentScale, Leatherstraps, Feathers, BoneFragments
 Wood = Wood, FineWood, RoundLog, ElderBark, YggdrasilWood, Blackwood, Frostwood
 Stone = Stone, Flint, Obsidian, BlackMarble, Grausten, StoneRock
 Seeds = Acorn, BeechSeeds, BirchSeeds, FirCone, FirConeFrost, PineCone, CarrotSeeds, TurnipSeeds, OnionSeeds, KaleSeeds, OatSeeds, PoteitrSeeds
@@ -46,12 +46,12 @@ Cooked = Cooked*, BakedPoteitr, BlackSoup, BloodPudding, BoarJerky, Bread, Carro
 Valuables = Amber, AmberPearl, Ruby, SilverNecklace, AncientCoin, AncientGemstone*, CrownJewel
 Trophies = Trophy*
 
-BlackForest = BoneFragments, GreydwarfEye, SurtlingCore, AncientSeed, Resin, Feathers, QueenBee, HardAntler
-MountainsSwamp = Guck, Ooze, Root, WitheredBone, Crystal, FreezeGland, WolfFang, WolfClaw, DragonTear, PowderedDragonEgg
+BlackForest = GreydwarfEye, SurtlingCore, AncientSeed, Resin, QueenBee, HardAntler, BjornPaw, Ectoplasm
+MountainsSwamp = Guck, Ooze, Root, WitheredBone, Crystal, FreezeGland, WolfFang, WolfClaw, DragonTear, PowderedDragonEgg, Chain
 PlainsOcean = Flax, LinenThread, Needle, Tar, Chitin
 Mistlands = Sap, Softtissue, Carapace, Mandible, Eitr, Bilebag, GiantBloodSack, Wisp, DvergrNeedle, BlackCore
 Ashlands = AskBladder, CharcoalResin, CharredBone, Charredskull, CelestialFeather, MoltenCore, MorgenHeart, MorgenSinew, ProustitePowder, SulfurStone, BonemawSerpentTooth, GemstoneRed, GemstoneGreen, GemstoneBlue, AsksvinCarrionNeck, AsksvinCarrionPelvic, AsksvinCarrionRibcage, AsksvinCarrionSkull
-DeepNorth = BjornPaw, MooseSinew, Ice, FrozenFuel, OozeMork, ElakingHairBundle, UndeadBjornRibcage, BarkaBranch
+DeepNorth = MooseSinew, Ice, FrozenFuel, OozeMork, ElakingHairBundle, UndeadBjornRibcage, BarkaBranch
 ";
 
         private static readonly Dictionary<string, string> Exact = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
