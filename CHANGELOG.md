@@ -3,6 +3,13 @@
 Notable changes in each release. The section for a tagged version becomes that release's notes on
 GitHub, so keep the headings as `## <version> - <date>`.
 
+## 1.0.9 - 2026-09-16
+
+**Tidy merges the smaller half too.** Tidying a chest with one trophy in it while another chest held
+a pile of trophies did nothing: the lone trophy counted as that chest's own category, so it was left
+alone. Now, if another chest holds more of the open chest's category, the open chest sends its share
+over there, the same "most of the group keeps it" rule that Tidy already used when pulling items in.
+
 ## 1.0.8 - 2026-09-13
 
 **Group tweaks.** Feathers and Bone Fragments now live with the hides. Bear Paw (`BjornPaw`) and

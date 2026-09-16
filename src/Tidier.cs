@@ -20,6 +20,9 @@ namespace NearbyChests
     ///   4. a junk chest.
     /// Anything left over stays. The second group in a shared chest stays put if it has no better home,
     /// so shared chests don't bounce items back and forth.
+    ///
+    /// The open chest's own category can move too: if another chest holds more of it, the open chest
+    /// is the smaller half of a split group and its share is merged into the bigger chest first.
     /// </summary>
     internal static class Tidier
     {
@@ -37,10 +40,13 @@ namespace NearbyChests
             var others = ChestFinder.GetNearby(player, Plugin.StackingRange.Value).Where(c => c != opened).ToList();
 
             Inventory from = opened.GetInventory();
-            string own = Category(from);
             var touched = new HashSet<Container>();
-            int moved = 0;
             int stayed = 0;
+
+            // If another chest is the stronger home for this chest's own category (it holds more of
+            // it), this chest is the split-off half: send the category there rather than keeping it.
+            int moved = MergeIntoStrongerHome(from, others, touched);
+            string own = Category(from);
 
             if (own != null)
             {
@@ -142,6 +148,36 @@ namespace NearbyChests
                 }
             }
             return gathered;
+        }
+
+        /// <summary>
+        /// The mirror of Gather: if the open chest's category has a chest that holds more of it, this
+        /// chest lost the split and its share moves over there. Uses the same "most of the category
+        /// keeps it" rule, so tidying either chest ends with the group in the same place.
+        /// </summary>
+        private static int MergeIntoStrongerHome(Inventory from, List<Container> others, HashSet<Container> touched)
+        {
+            string own = Category(from);
+            if (own == null || own == Junk)
+                return 0;
+
+            int mine = CategoryCount(from, own);
+            var stronger = others
+                .Select(c => new { Chest = c, Inv = c.GetInventory() })
+                .Where(x => Category(x.Inv) == own && CategoryCount(x.Inv, own) > mine)
+                .OrderByDescending(x => CategoryCount(x.Inv, own))
+                .Select(x => x.Chest)
+                .ToList();
+            if (stronger.Count == 0)
+                return 0;
+
+            int moved = 0;
+            foreach (ItemDrop.ItemData item in from.GetAllItems().ToList())
+            {
+                if (GroupOf(item) == own)
+                    moved += MoveIntoFirst(item, from, stronger, touched);
+            }
+            return moved;
         }
 
         internal static string GroupOf(ItemDrop.ItemData item) => ItemGroups.Of(item) ?? Junk;

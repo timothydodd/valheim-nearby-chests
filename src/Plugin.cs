@@ -12,7 +12,7 @@ namespace NearbyChests
     {
         public const string Guid = "NearbyChests";
         public const string ModName = "Nearby Chests";
-        public const string Version = "1.0.8";
+        public const string Version = "1.0.9";
 
         internal static ManualLogSource Log;
 
