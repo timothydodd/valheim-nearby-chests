@@ -3,6 +3,25 @@
 Notable changes in each release. The section for a tagged version becomes that release's notes on
 GitHub, so keep the headings as `## <version> - <date>`.
 
+## 1.2.0 - 2026-10-07
+
+**Choose which chests to use.** The chest window now has an **Include in NearbyChests** checkbox
+below the panel. Marks are saved with each chest and synchronized through vanilla networking, with
+no server mod required. Enable `OnlyUseMarkedChests` to restrict all automatic deposits and
+withdrawals, including crafting/upgrading/building counts and consumption, station feeding, Stack,
+Tidy and build-material pulls. The setting is off by default; manual transfers remain available.
+
+**Leave empty chests alone.** Enable `DontFillEmptyChests` to prevent Stack and Tidy from depositing
+into completely empty chests, including the open-chest fallback. The setting is off by default.
+
+**Stack and tidy with one shortcut.** Assign `StackAndTidyKey` to stack your inventory once, then
+tidy eligible nearby chests within `StackingRange` in a single nearest-first pass. No chest needs
+to be open. The shortcut starts unbound (`None`), respects existing chest and item restrictions,
+and displays one local summary.
+
+**Extended function keys.** Both configurable shortcuts now support F16-F24, including F20, as
+main keys or modifiers instead of being rejected by Valheim's keycode validation.
+
 ## 1.1.0 - 2026-09-23
 
 **Ignore a slot.** Middle-click a slot in your inventory and Stack leaves it alone. A pin in the
