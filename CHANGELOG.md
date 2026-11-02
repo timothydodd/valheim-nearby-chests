@@ -3,6 +3,18 @@
 Notable changes in each release. The section for a tagged version becomes that release's notes on
 GitHub, so keep the headings as `## <version> - <date>`.
 
+## 1.2.1 - 2026-11-02
+
+**No double charge next to ValheimPlus.** With `CraftFromChests`, `BuildFromChests` and
+`StationsFromChests` all off, the mod still took a recipe's shortfall out of nearby chests whenever
+the game spent materials. ValheimPlus's CraftFromChest does the same, so running both charged the
+chests twice (10 wood carried 0 took 20 from the chest). Spending from chests now only happens when
+one of those settings is on; with them off the inventory behaves exactly as vanilla. Stack, Tidy and
+`PullBuildMaterials` are unaffected.
+
+Thanks to [mats-johanson](https://github.com/mats-johanson).
+([#13](https://github.com/timothydodd/valheim-nearby-chests/pull/13))
+
 ## 1.2.0 - 2026-10-16
 
 **Choose your chests.** New `OnlyUseMarkedChests` setting, off by default. Turn it on and each
