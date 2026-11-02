@@ -23,6 +23,14 @@ namespace NearbyChests
             (Craft > 0 && Plugin.CraftFromChests.Value) || (Build > 0 && Plugin.BuildFromChests.Value)
             || Station > 0;
 
+        /// <summary>
+        /// Spending from chests needs one of the features that let the action count them. With all of them
+        /// off, another mod (e.g. ValheimPlus CraftFromChest) may already take the shortfall from chests
+        /// itself, and spending it here as well would charge the player twice.
+        /// </summary>
+        internal static bool Spending =>
+            Consume > 0 && (Station > 0 || Plugin.CraftFromChests.Value || Plugin.BuildFromChests.Value);
+
         internal static bool IsLocalPlayerInventory(Inventory inv, out Player player)
         {
             player = Player.m_localPlayer;
@@ -147,7 +155,7 @@ namespace NearbyChests
         // Spend what the player is carrying first; take only the shortfall from chests.
         private static void Prefix(Inventory __instance, string name, int amount, int itemQuality, bool worldLevelBased)
         {
-            if (Scope.Consume <= 0 || !Scope.IsLocalPlayerInventory(__instance, out Player player))
+            if (!Scope.Spending || !Scope.IsLocalPlayerInventory(__instance, out Player player))
                 return;
 
             int carried = 0;
