@@ -6,3 +6,4 @@ tools/
 .vs/
 ValheimDir.props
 .github/copilot-instructions.md
+.DS_Store
